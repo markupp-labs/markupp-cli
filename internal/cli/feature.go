@@ -70,7 +70,7 @@ func (a *App) confirmDone(message string) {
 
 // record lists the schema types the commands of this file decode for the text output.
 type record interface {
-	schema.Vault | schema.VaultMember
+	schema.Vault | schema.VaultMember | schema.Publication
 }
 
 // decodeRecord decodes one server record for the text output.

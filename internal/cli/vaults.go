@@ -25,8 +25,9 @@ to each one, and publish a vault for reading without an account.`
 
 func newVaultsCmd(app *App) *cobra.Command {
 	cmd := newGroup("vaults", "Manage vaults, their members and their publication", "  mu vaults list\n  mu vaults members list 3b241101-e2bb-4255-8caf-4136c566a962")
-	cmd.Long = requiresServer(featureVaults, vaultsLong)
-	cmd.AddCommand(newVaultsListCmd(app), newVaultsCreateCmd(app), newVaultsRenameCmd(app), newVaultsDeleteCmd(app), newVaultMembersCmd(app))
+	cmd.Long = requiresServer(featureVaults, vaultsLong) + " Publishing requires " + featurePublication + " too."
+	cmd.AddCommand(newVaultsListCmd(app), newVaultsCreateCmd(app), newVaultsRenameCmd(app), newVaultsDeleteCmd(app), newVaultMembersCmd(app),
+		newVaultsPublicationCmd(app), newVaultsPublishCmd(app), newVaultsUnpublishCmd(app))
 	return cmd
 }
 

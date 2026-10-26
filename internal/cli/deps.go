@@ -37,6 +37,8 @@ func newServices(api *client.Client) Services {
 	return Services{
 		Vaults:       api,
 		VaultMembers: api,
+		Publication:  api,
+		Public:       api,
 	}
 }
 

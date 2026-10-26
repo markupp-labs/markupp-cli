@@ -107,7 +107,7 @@ type vaultTarget struct {
 func addVaultFlags(cmd *cobra.Command, f *vaultFlags, allowPublic bool) {
 	cmd.Flags().StringVar(&f.vault, "vault", "", "vault id (overrides "+config.EnvVault+" and the config file)")
 	if allowPublic {
-		cmd.Flags().StringVar(&f.public, "public", "", "read the public vault with this slug, without credentials")
+		cmd.Flags().StringVar(&f.public, "public", "", "read the public vault with this slug, without credentials (requires a server with "+featurePublication+")")
 	}
 }
 
