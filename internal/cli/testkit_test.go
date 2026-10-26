@@ -108,6 +108,7 @@ type testMu struct {
 	auth   *fakeAuthenticator
 	stdin  io.Reader
 	files  fakeFiles
+	tui    *fakeTUI
 }
 
 func newTestMu() *testMu {
@@ -116,6 +117,7 @@ func newTestMu() *testMu {
 		store:  &fakeConfigStore{path: "/home/u/.config/markupp/cli.json"},
 		server: &fakeServer{},
 		auth:   &fakeAuthenticator{},
+		tui:    &fakeTUI{},
 	}
 }
 
@@ -123,7 +125,7 @@ func (m *testMu) deps(stdout, stderr *bytes.Buffer) Deps {
 	return Deps{
 		Stdout: stdout, Stderr: stderr, Env: m.env.lookup, Store: m.store,
 		Version: "1.2.3", Connect: m.server.connect, Auth: m.auth.build,
-		Stdin: m.stdin, ReadFile: m.files.read,
+		Stdin: m.stdin, ReadFile: m.files.read, TUI: m.tui.run,
 	}
 }
 

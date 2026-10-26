@@ -16,6 +16,7 @@ Available Commands:
   logout      Revoke the stored login and remove it from the config file
   notes       List, read, write and search notes
   status      Show the server, the login and the account; tokens are never shown
+  tui         Browse and edit notes in an interactive interface
 
 Flags:
       --allow-plain-http   allow http:// outside localhost, sending the token unencrypted
