@@ -1,0 +1,4 @@
+SOURCE                                    TYPE              TARGET                                    CITED
+a.md                                      explicit          notes/b.md                                B
+a.md                                      typed:author      people/ana.md                             Ana
+a.md                                      explicit          -                                         Meting

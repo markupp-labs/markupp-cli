@@ -38,13 +38,20 @@ type Deps struct {
 // interface declared next to the commands that use it; the real *client.Client
 // satisfies all of them. To add one: a field here and a line in newServices.
 type Services struct {
-	Account AccountReader
-	Notes   NoteService
+	Account   AccountReader
+	Notes     NoteService
+	NoteLinks NoteLinkReader
+	Graph     GraphReader
 }
 
 // newServices wires the real client into every port.
 func newServices(api *client.Client) Services {
-	return Services{Account: api, Notes: api}
+	return Services{
+		Account:   api,
+		Notes:     api,
+		NoteLinks: api,
+		Graph:     api,
+	}
 }
 
 // Target says which server identity a command needs.

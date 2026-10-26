@@ -23,6 +23,7 @@ var commandConstructors = []func(*App) *cobra.Command{
 	newStatusCmd,
 	newConfigCmd,
 	newNotesCmd,
+	newGraphCmd,
 }
 
 const rootExample = `  mu config set url https://markupp.example.com
@@ -62,6 +63,7 @@ func newRoot(app *App) *cobra.Command {
 	for _, construct := range commandConstructors {
 		root.AddCommand(construct(app))
 	}
+	attachSubcommands(app, root)
 	return root
 }
 

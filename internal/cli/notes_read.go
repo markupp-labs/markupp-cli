@@ -175,9 +175,9 @@ func noteFields(note schema.Note) []output.Field {
 		{Key: "created_at", Value: note.CreatedAt},
 		{Key: "updated_at", Value: note.UpdatedAt},
 		{Key: "content_sha256", Value: note.ContentSHA256},
-		{Key: "degree", Value: optionalInt(note.Degree)},
+		{Key: "degree", Value: dashedInt(note.Degree)},
 		{Key: "pagerank", Value: optionalFloat(note.PageRank)},
-		{Key: "community", Value: optionalInt64(note.Community)},
+		{Key: "community", Value: dashedInt64(note.Community)},
 	}
 }
 
@@ -188,14 +188,14 @@ func contentMark(content string) string {
 	return "sha256:" + hex.EncodeToString(sum[:8])
 }
 
-func optionalInt(value *int) string {
+func dashedInt(value *int) string {
 	if value == nil {
 		return "-"
 	}
 	return strconv.Itoa(*value)
 }
 
-func optionalInt64(value *int64) string {
+func dashedInt64(value *int64) string {
 	if value == nil {
 		return "-"
 	}
