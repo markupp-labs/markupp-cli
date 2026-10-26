@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -116,10 +117,6 @@ func (c *notesGetCmd) run(cmd *cobra.Command, id string) error {
 	if c.content && c.app.global.json {
 		return failure.New(failure.Usage, "", "--content and --json are exclusive, expected at most one")
 	}
-	r, err := c.app.renderer(false)
-	if err != nil {
-		return err
-	}
 	notes, err := c.app.notes(cmd.Context(), "")
 	if err != nil {
 		return err
@@ -128,18 +125,31 @@ func (c *notesGetCmd) run(cmd *cobra.Command, id string) error {
 	if err != nil {
 		return err
 	}
-	return r.object(body, c.render)
+	return c.app.renderNote(body, c.print)
 }
 
-func (c *notesGetCmd) render(p *output.Printer, raw json.RawMessage) error {
-	var note schema.Note
-	if err := json.Unmarshal(raw, &note); err != nil {
-		return malformedRecord(raw, err)
-	}
+func (c *notesGetCmd) print(p *output.Printer, note schema.Note) error {
 	if c.content {
 		return p.Raw(note.Content)
 	}
 	return printNote(p, note)
+}
+
+// renderNote prints a note body: unchanged with --json, decoded and handed to print
+// otherwise.
+func (a *App) renderNote(body io.ReadCloser, print func(*output.Printer, schema.Note) error) error {
+	r, err := a.renderer(false)
+	if err != nil {
+		_ = body.Close()
+		return err
+	}
+	return r.object(body, func(p *output.Printer, raw json.RawMessage) error {
+		var note schema.Note
+		if err := json.Unmarshal(raw, &note); err != nil {
+			return malformedRecord(raw, err)
+		}
+		return print(p, note)
+	})
 }
 
 // printNote prints the metadata of note, then its content between delimiter lines.
