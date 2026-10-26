@@ -12,7 +12,7 @@ import (
 
 // requestBody lists the schema types a request can carry as its JSON body.
 type requestBody interface {
-	schema.VaultNameRequest | schema.VaultMemberRequest
+	schema.VaultNameRequest | schema.VaultMemberRequest | schema.PublicationRequest
 }
 
 // openJSON encodes payload as the body of r, runs it and returns the response body.
