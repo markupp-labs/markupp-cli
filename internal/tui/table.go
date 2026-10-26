@@ -1,6 +1,12 @@
 package tui
 
 import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -40,54 +46,170 @@ type listView struct {
 	order  sortOrder
 }
 
-func newListView(s *shell, spec listing) *listView { return *new(*listView) }
+func newListView(s *shell, spec listing) *listView {
+	table := tview.NewTable().SetSelectable(true, false).SetFixed(1, 0)
+	lv := &listView{shell: s, spec: spec, table: table, order: sortOrder{column: -1}}
+	lv.render()
+	return lv
+}
 
-func (lv *listView) Crumb() string { return *new(string) }
+func (lv *listView) Crumb() string { return lv.spec.resource }
 
 // Title is resource(context)[count], with the filter when there is one.
-func (lv *listView) Title() string { return *new(string) }
+func (lv *listView) Title() string {
+	title := lv.spec.resource
+	if lv.spec.context != "" {
+		title += "(" + lv.spec.context + ")"
+	}
+	title += "[" + strconv.Itoa(len(lv.shown)) + "]"
+	if lv.filter != "" {
+		title += " /" + lv.filter
+	}
+	return title
+}
 
-func (lv *listView) Widget() tview.Primitive { return *new(tview.Primitive) }
+func (lv *listView) Widget() tview.Primitive { return lv.table }
 
-func (lv *listView) Refreshable() bool { return *new(bool) }
+func (lv *listView) Refreshable() bool { return true }
 
 // Load reads the records and keeps the selection, filter and sort order.
-func (lv *listView) Load() {}
+func (lv *listView) Load() {
+	lv.shell.async(func(ctx context.Context) (func(), error) {
+		records, err := lv.spec.load(ctx)
+		return func() { lv.setRecords(records) }, err
+	})
+}
 
-func (lv *listView) setRecords(records []record) {}
+func (lv *listView) setRecords(records []record) {
+	lv.all = records
+	lv.apply()
+}
 
-func (lv *listView) Filter() string { return *new(string) }
+func (lv *listView) Filter() string { return lv.filter }
 
-func (lv *listView) SetFilter(term string) {}
+func (lv *listView) SetFilter(term string) {
+	lv.filter = term
+	lv.apply()
+}
 
 // Search runs a server search when the listing has one.
-func (lv *listView) Search(term string) {}
+func (lv *listView) Search(term string) {
+	if lv.spec.search == nil {
+		lv.shell.flashError(fmt.Errorf("%s has no server search, expected / with plain text", lv.spec.resource))
+		return
+	}
+	lv.spec.search(term)
+}
 
 // Hotkeys are Enter, the keys of the listing and Shift plus a column initial to sort.
-func (lv *listView) Hotkeys() []Hotkey { return *new([]Hotkey) }
+func (lv *listView) Hotkeys() []Hotkey {
+	var keys []Hotkey
+	if lv.spec.enter != nil {
+		keys = append(keys, ctrlKey(tcell.KeyEnter, "open", lv.open))
+	}
+	if lv.spec.keys != nil {
+		keys = append(keys, lv.spec.keys(lv.selected)...)
+	}
+	return append(keys, lv.sortKeys()...)
+}
 
-func (lv *listView) open() {}
+func (lv *listView) open() {
+	if row, ok := lv.selected(); ok {
+		lv.spec.enter(row)
+	}
+}
 
 // selected is the row under the cursor; row 0 is the header.
-func (lv *listView) selected() (record, bool) { return *new(record), *new(bool) }
+func (lv *listView) selected() (record, bool) {
+	row, _ := lv.table.GetSelection()
+	if row < 1 || row > len(lv.shown) {
+		return record{}, false
+	}
+	return lv.shown[row-1], true
+}
 
-func (lv *listView) sortKeys() []Hotkey { return *new([]Hotkey) }
+func (lv *listView) sortKeys() []Hotkey {
+	var keys []Hotkey
+	for i, column := range lv.spec.columns {
+		initial, ok := sortRune(lv.spec.columns, i)
+		if !ok {
+			continue
+		}
+		index := i
+		key := runeKey(initial, "sort "+column, func() { lv.sortBy(index) })
+		key.minor = true
+		keys = append(keys, key)
+	}
+	return keys
+}
 
-func (lv *listView) sortBy(column int) {}
+func (lv *listView) sortBy(column int) {
+	lv.order = lv.order.toggle(column)
+	lv.apply()
+}
 
 // apply filters and sorts the records, then draws them.
-func (lv *listView) apply() {}
+func (lv *listView) apply() {
+	lv.shown = filterRecords(lv.all, lv.filter)
+	sortRecords(lv.shown, lv.order)
+	lv.render()
+	lv.shell.refreshChrome()
+}
 
-func (lv *listView) render() {}
+func (lv *listView) render() {
+	row, _ := lv.table.GetSelection()
+	lv.table.Clear()
+	lv.renderHeader()
+	for i, rec := range lv.shown {
+		lv.renderRow(i+1, rec)
+	}
+	// Scrolling to the top first drops the tracking of the end that tview turns on
+	// while the table is empty; Select then scrolls back to the selection.
+	lv.table.ScrollToBeginning().Select(clampRow(row, len(lv.shown)), 0)
+}
 
-func (lv *listView) renderHeader() {}
+func (lv *listView) renderHeader() {
+	for i, column := range lv.spec.columns {
+		title := column + lv.order.arrow(i)
+		cell := tview.NewTableCell(tview.Escape(title)).SetSelectable(false).SetExpansion(1)
+		lv.table.SetCell(0, i, cell.SetAttributes(tcell.AttrBold))
+	}
+}
 
-func (lv *listView) renderRow(row int, rec record) {}
+func (lv *listView) renderRow(row int, rec record) {
+	for i, value := range rec.cells {
+		lv.table.SetCell(row, i, tview.NewTableCell(plain(value)).SetExpansion(1).SetMaxWidth(60))
+	}
+}
 
 // clampRow keeps the selection inside the rows, below the header.
-func clampRow(row, count int) int { return *new(int) }
+func clampRow(row, count int) int {
+	if row < 1 {
+		return 1
+	}
+	if row > count && count > 0 {
+		return count
+	}
+	return row
+}
 
 // filterRecords keeps the records with a cell containing term, ignoring case.
-func filterRecords(records []record, term string) []record { return *new([]record) }
+func filterRecords(records []record, term string) []record {
+	needle := strings.ToLower(term)
+	kept := make([]record, 0, len(records))
+	for _, rec := range records {
+		if needle == "" || matchesAny(rec.cells, needle) {
+			kept = append(kept, rec)
+		}
+	}
+	return kept
+}
 
-func matchesAny(cells []string, needle string) bool { return *new(bool) }
+func matchesAny(cells []string, needle string) bool {
+	for _, cell := range cells {
+		if strings.Contains(strings.ToLower(cell), needle) {
+			return true
+		}
+	}
+	return false
+}

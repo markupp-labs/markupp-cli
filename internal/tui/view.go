@@ -50,23 +50,49 @@ type Hotkey struct {
 const ctrlDelete = tcell.KeyCtrlD
 
 // runeKey is a hotkey on a printable key.
-func runeKey(r rune, label string, run func()) Hotkey { return *new(Hotkey) }
+func runeKey(r rune, label string, run func()) Hotkey {
+	return Hotkey{Key: tcell.KeyRune, Rune: r, Label: label, Run: run}
+}
 
 // ctrlKey is a hotkey on a control key.
-func ctrlKey(key tcell.Key, label string, run func()) Hotkey { return *new(Hotkey) }
+func ctrlKey(key tcell.Key, label string, run func()) Hotkey {
+	return Hotkey{Key: key, Label: label, Run: run}
+}
 
 // matches reports whether event is the key of h.
-func (h Hotkey) matches(event *tcell.EventKey) bool { return *new(bool) }
+func (h Hotkey) matches(event *tcell.EventKey) bool {
+	if h.Key != event.Key() {
+		return false
+	}
+	return h.Key != tcell.KeyRune || h.Rune == event.Rune()
+}
 
 // Name is how the header shows the key: <e>, <ctrl-d>, <enter>.
-func (h Hotkey) Name() string { return *new(string) }
+func (h Hotkey) Name() string {
+	if h.Key == tcell.KeyRune {
+		return "<" + string(h.Rune) + ">"
+	}
+	return "<" + keyName(h.Key) + ">"
+}
 
 var keyNames = map[tcell.Key]string{
 	tcell.KeyEnter: "enter", tcell.KeyEscape: "esc", tcell.KeyCtrlD: "ctrl-d",
 	tcell.KeyCtrlR: "ctrl-r", tcell.KeyCtrlS: "ctrl-s", tcell.KeyTab: "tab",
 }
 
-func keyName(key tcell.Key) string { return *new(string) }
+func keyName(key tcell.Key) string {
+	if name, ok := keyNames[key]; ok {
+		return name
+	}
+	return tcell.KeyNames[key]
+}
 
 // findHotkey returns the hotkey of event among keys.
-func findHotkey(keys []Hotkey, event *tcell.EventKey) (Hotkey, bool) { return *new(Hotkey), *new(bool) }
+func findHotkey(keys []Hotkey, event *tcell.EventKey) (Hotkey, bool) {
+	for _, key := range keys {
+		if key.matches(event) {
+			return key, true
+		}
+	}
+	return Hotkey{}, false
+}

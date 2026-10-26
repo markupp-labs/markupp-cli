@@ -53,8 +53,23 @@ type Terminal struct {
 
 const flashDuration = 4 * time.Second
 
-func (c Config) now() time.Time { return *new(time.Time) }
+func (c Config) now() time.Time {
+	if c.Clock != nil {
+		return c.Clock()
+	}
+	return time.Now()
+}
 
-func (c Config) flashFor() time.Duration { return *new(time.Duration) }
+func (c Config) flashFor() time.Duration {
+	if c.FlashFor > 0 {
+		return c.FlashFor
+	}
+	return flashDuration
+}
 
-func (c Config) session() Session { return *new(Session) }
+func (c Config) session() Session {
+	if c.Session != nil {
+		return c.Session()
+	}
+	return Session{}
+}
