@@ -129,11 +129,12 @@ func (m *testMu) deps(stdout, stderr *bytes.Buffer) Deps {
 	}
 }
 
-// run executes mu with args and returns its stdout, stderr and exit code.
+// run executes mu with args and returns its stdout, stderr and exit code. args is
+// never nil: cobra reads os.Args, the flags of go test, when it is.
 func (m *testMu) run(t *testing.T, args ...string) muRun {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
-	code := Execute(context.Background(), m.deps(&stdout, &stderr), args)
+	code := Execute(context.Background(), m.deps(&stdout, &stderr), append([]string{}, args...))
 	return muRun{stdout: stdout.String(), stderr: stderr.String(), code: code}
 }
 
