@@ -58,6 +58,7 @@ func newRoot(app *App) *cobra.Command {
 	for _, construct := range commandConstructors {
 		root.AddCommand(construct(app))
 	}
+	attachSubcommands(app, root)
 	return root
 }
 

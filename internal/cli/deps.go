@@ -25,11 +25,15 @@ type Deps struct {
 // Services are the ports the commands reach the server through. Each port is a small
 // interface declared next to the commands that use it; the real *client.Client
 // satisfies all of them. To add one: a field here and a line in newServices.
-type Services struct{}
+type Services struct {
+	NoteLinks NoteLinkReader
+}
 
 // newServices wires the real client into every port.
-func newServices(*client.Client) Services {
-	return Services{}
+func newServices(api *client.Client) Services {
+	return Services{
+		NoteLinks: api,
+	}
 }
 
 // Target says which server identity a command needs.
