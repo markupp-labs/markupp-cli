@@ -13,7 +13,10 @@ type portCall struct {
 	method   string
 	subject  string
 	linkType string
+	depth    int
+	cid      int64
 	page     client.Page
+	links    client.LinkFilter
 	graph    client.GraphFilter
 }
 

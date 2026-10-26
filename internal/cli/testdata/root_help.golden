@@ -10,6 +10,7 @@ Examples:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   config      Show and change the configuration
+  graph       Read the graph, communities and links of a vault
   help        Help about any command
   notes       Read and write notes
 

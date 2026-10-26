@@ -27,12 +27,14 @@ type Deps struct {
 // satisfies all of them. To add one: a field here and a line in newServices.
 type Services struct {
 	NoteLinks NoteLinkReader
+	Graph     GraphReader
 }
 
 // newServices wires the real client into every port.
 func newServices(api *client.Client) Services {
 	return Services{
 		NoteLinks: api,
+		Graph:     api,
 	}
 }
 

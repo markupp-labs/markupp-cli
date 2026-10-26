@@ -1,0 +1,8 @@
+ID                                    DEGREE  PAGERANK  COMMUNITY  PATH
+n1                                    2       0.4123    7          a.md
+n2                                    -       -         -          notes/b.md
+-                                     -       -         -          Meting (unresolved)
+
+SOURCE                                    TYPE              TARGET
+a.md                                      typed:author      notes/b.md
+a.md                                      explicit          Meting (unresolved)
