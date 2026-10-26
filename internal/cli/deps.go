@@ -4,10 +4,12 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"time"
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/config"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
+	"github.com/markupp-labs/markupp-cli/internal/session"
 )
 
 // Deps is everything mu takes from the process. main fills it; tests fill it with
@@ -20,16 +22,24 @@ type Deps struct {
 	Version string
 	// Connect builds the Services; nil means the real server through internal/client.
 	Connect ServiceFactory
+	// Auth builds the Authenticator of mu login and logout; nil means the session.
+	Auth AuthFactory
+	// Clock is the current time for the token expiry; nil means time.Now.
+	Clock func() time.Time
+	// OpenURL opens the login page in a browser, best effort; nil only prints it.
+	OpenURL func(url string) error
 }
 
 // Services are the ports the commands reach the server through. Each port is a small
 // interface declared next to the commands that use it; the real *client.Client
 // satisfies all of them. To add one: a field here and a line in newServices.
-type Services struct{}
+type Services struct {
+	Account AccountReader
+}
 
 // newServices wires the real client into every port.
-func newServices(*client.Client) Services {
-	return Services{}
+func newServices(api *client.Client) Services {
+	return Services{Account: api}
 }
 
 // Target says which server identity a command needs.
@@ -49,6 +59,7 @@ type Connection struct {
 	Public         bool
 	Logger         *slog.Logger
 	UserAgent      string
+	Clock          func() time.Time
 }
 
 // ServiceFactory builds the Services for one connection.
@@ -82,15 +93,17 @@ func newAPIClient(ctx context.Context, conn Connection) (*client.Client, error) 
 	return client.New(opts)
 }
 
-// tokenSource picks the credential: MARKUPP_TOKEN wins, then the stored login.
-// The session package replaces the stored login branch with a refreshing source.
+// tokenSource picks the credential: MARKUPP_TOKEN wins and is never refreshed, then
+// the stored login, refreshed under the config lock by the session.
 func tokenSource(_ context.Context, conn Connection) (client.TokenSource, error) {
+	server := conn.Resolved.URL.Value
 	if token := conn.Resolved.Token.Value; token != "" {
 		return client.StaticToken(token), nil
 	}
 	if auth := conn.Settings.Auth; auth != nil && auth.AccessToken != "" {
-		return client.StaticToken(auth.AccessToken), nil
+		oauth := session.NewOAuth(client.NewHTTPClient(nil, conn.Logger), conn.AllowPlainHTTP)
+		return session.NewSource(conn.Store, oauth, server, conn.Clock), nil
 	}
-	return nil, failure.New(failure.Unauthenticated, conn.Resolved.URL.Value, "not logged in").
-		WithHint("run mu login, or set " + config.EnvToken)
+	return nil, failure.New(failure.Unauthenticated, server, "not logged in").
+		WithHint("run mu login " + server + ", or set " + config.EnvToken)
 }

@@ -11,6 +11,9 @@ Available Commands:
   completion  Generate the autocompletion script for the specified shell
   config      Show and change the configuration
   help        Help about any command
+  login       Log in to a server through the browser
+  logout      Revoke the stored login and remove it from the config file
+  status      Show the server, the login and the account; tokens are never shown
 
 Flags:
       --allow-plain-http   allow http:// outside localhost, sending the token unencrypted
