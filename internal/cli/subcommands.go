@@ -12,7 +12,11 @@ type subcommand struct {
 // subcommandConstructors attach commands under a group, in this order. When no
 // constructor in commandConstructors builds the group, the fallback in
 // fallbackGroups creates it.
-var subcommandConstructors = []subcommand{}
+var subcommandConstructors = []subcommand{
+	{parent: "notes", build: newNotesLinksCmd},
+	{parent: "notes", build: newNotesMentionsCmd},
+	{parent: "notes", build: newNotesSuggestCmd},
+}
 
 // fallbackGroups build a group that subcommands need when nothing else built it.
 var fallbackGroups = map[string]func() *cobra.Command{
