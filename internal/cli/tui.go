@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/config"
+	"github.com/markupp-labs/markupp-cli/internal/failure"
 	"github.com/markupp-labs/markupp-cli/internal/tui"
 )
 
@@ -44,34 +46,103 @@ type tuiCmd struct {
 	refresh time.Duration
 }
 
-func newTUICmd(app *App) *cobra.Command { return *new(*cobra.Command) }
+func newTUICmd(app *App) *cobra.Command {
+	c := &tuiCmd{app: app}
+	cmd := &cobra.Command{
+		Use:   "tui",
+		Short: "Browse and edit notes in an interactive interface",
+		Long:  tuiLong,
+		Example: `  mu tui
+  mu tui --vault 9b2f4c1e-0a1b-4c2d-8e3f-a1b2c3d4e5f6 --refresh 30s`,
+		Args: exactArgs(),
+		RunE: func(cmd *cobra.Command, _ []string) error { return c.run(cmd.Context()) },
+	}
+	addVaultFlags(cmd, &c.vault, false)
+	cmd.Flags().DurationVar(&c.refresh, "refresh", 0, "reload the current listing at this interval, like 30s (default off)")
+	return cmd
+}
 
-func (c *tuiCmd) run(ctx context.Context) error { return *new(error) }
+func (c *tuiCmd) run(ctx context.Context) error {
+	if c.refresh < 0 {
+		return failure.New(failure.Usage, "--refresh", fmt.Sprintf("invalid interval %s, expected a positive duration like 30s", c.refresh))
+	}
+	resolved, settings, err := c.app.resolve(c.vault.vault)
+	if err != nil {
+		return err
+	}
+	if resolved.URL.Value == "" {
+		return errNoServer()
+	}
+	return c.app.runTUI()(ctx, c.config(resolved, settings))
+}
 
 func (c *tuiCmd) config(resolved config.Resolved, settings config.Settings) tui.Config {
-	return *new(tui.Config)
+	a := c.app
+	return tui.Config{
+		Connect:  a.tuiConnector(resolved, settings),
+		Session:  a.tuiSession,
+		Scope:    tui.Scope{Tenant: resolved.Tenant.Value},
+		Vault:    resolved.Vault.Value,
+		Refresh:  c.refresh,
+		Editor:   a.editorCommand(),
+		Terminal: tui.Terminal{In: a.deps.Stdin, Out: a.deps.Stdout, Err: a.deps.Stderr},
+		Clock:    a.deps.Clock,
+	}
 }
 
 func (a *App) runTUI() func(context.Context, tui.Config) error {
-	return *new(func(context.Context, tui.Config) error)
+	if a.deps.TUI != nil {
+		return a.deps.TUI
+	}
+	return tui.Run
 }
 
 // editorCommand is $VISUAL, then $EDITOR; empty means the built in text area.
-func (a *App) editorCommand() string { return *new(string) }
+func (a *App) editorCommand() string {
+	for _, name := range []string{"VISUAL", "EDITOR"} {
+		if value, ok := a.deps.Env(name); ok && value != "" {
+			return value
+		}
+	}
+	return ""
+}
 
 // tuiSession reads the server and the login again, for the header of mu tui.
-func (a *App) tuiSession() tui.Session { return *new(tui.Session) }
+func (a *App) tuiSession() tui.Session {
+	resolved, settings, err := a.resolve("")
+	if err != nil {
+		return tui.Session{}
+	}
+	credential := credentialOf(resolved, settings)
+	return tui.Session{Server: resolved.URL.Value, Credential: credential.Source, ExpiresAt: credential.ExpiresAt}
+}
 
 // tuiConnector connects mu tui to a scope: the tenant it switches to replaces the
 // resolved one. Public vaults need the public routes of the server, which this
 // build does not wire yet.
 func (a *App) tuiConnector(resolved config.Resolved, settings config.Settings) tui.Connector {
-	return *new(tui.Connector)
+	return func(ctx context.Context, scope tui.Scope) (tui.Ports, error) {
+		if scope.PublicSlug != "" {
+			return tui.Ports{}, failure.New(failure.NotFound, ":public "+scope.PublicSlug, "public vaults are not available in this build of mu")
+		}
+		target := resolved
+		if scope.Tenant != "" {
+			target.Tenant.Value = scope.Tenant
+		}
+		svc, err := a.dial(ctx, target, settings, false)
+		return tuiPorts(svc), err
+	}
 }
 
 // tuiPorts hands the services to the interface. A port the services lack stays nil,
 // and the interface says the view is not available.
-func tuiPorts(svc Services) tui.Ports { return *new(tui.Ports) }
+func tuiPorts(svc Services) tui.Ports {
+	ports := tui.Ports{Notes: svc.Notes, Relations: svc.NoteLinks, Account: svc.Account}
+	if svc.Graph != nil {
+		ports.Graph = tuiGraph{graph: svc.Graph}
+	}
+	return ports
+}
 
 // tuiGraph reads the graph for the interface with the default filters of the server.
 type tuiGraph struct {
@@ -79,13 +150,13 @@ type tuiGraph struct {
 }
 
 func (g tuiGraph) NoteGraph(ctx context.Context, id string, depth int) (io.ReadCloser, error) {
-	return *new(io.ReadCloser), *new(error)
+	return g.graph.NoteGraph(ctx, id, depth, client.GraphFilter{})
 }
 
 func (g tuiGraph) VaultCommunities(ctx context.Context, vault string, page client.Page) (io.ReadCloser, error) {
-	return *new(io.ReadCloser), *new(error)
+	return g.graph.VaultCommunities(ctx, vault, page)
 }
 
 func (g tuiGraph) VaultLinks(ctx context.Context, vault string, page client.Page) (io.ReadCloser, error) {
-	return *new(io.ReadCloser), *new(error)
+	return g.graph.VaultLinks(ctx, vault, client.LinkFilter{}, page)
 }

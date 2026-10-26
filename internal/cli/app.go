@@ -79,12 +79,18 @@ func (a *App) connect(ctx context.Context, target Target) (Services, error) {
 	if err != nil {
 		return Services{}, err
 	}
+	return a.dial(ctx, resolved, settings, target.Public)
+}
+
+// dial builds the Services of settings already resolved, as mu tui does again for
+// each tenant it switches to.
+func (a *App) dial(ctx context.Context, resolved config.Resolved, settings config.Settings, public bool) (Services, error) {
 	if resolved.URL.Value == "" {
 		return Services{}, errNoServer()
 	}
 	return a.factory()(ctx, Connection{
 		Resolved: resolved, Settings: settings, Store: a.deps.Store,
-		AllowPlainHTTP: a.global.allowPlainHTTP, Public: target.Public,
+		AllowPlainHTTP: a.global.allowPlainHTTP, Public: public,
 		Logger: a.requestLogger(), UserAgent: "mu/" + a.deps.Version, Clock: a.deps.Clock,
 	})
 }
