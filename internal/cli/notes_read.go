@@ -40,7 +40,7 @@ func newNotesListCmd(app *App) *cobra.Command {
 		Example: `  mu notes list --vault 3b241101-e2bb-4255-8caf-4136c566a962 --limit 20
   mu notes list --limit 100 --offset 100 --ndjson | jq -r .path`,
 		Args: exactArgs(),
-		RunE: func(cmd *cobra.Command, _ []string) error { return errNotesPending },
+		RunE: func(cmd *cobra.Command, _ []string) error { return c.run(cmd) },
 	}
 	addVaultFlags(cmd, &c.vault, false)
 	addListFlags(cmd, &c.list)
@@ -106,7 +106,7 @@ func newNotesGetCmd(app *App) *cobra.Command {
   mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --content > meeting.md
   mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --json | jq -r .updated_at`,
 		Args: exactArgs("ID"),
-		RunE: func(cmd *cobra.Command, args []string) error { return errNotesPending },
+		RunE: func(cmd *cobra.Command, args []string) error { return c.run(cmd, args[0]) },
 	}
 	cmd.Flags().BoolVar(&c.content, "content", false, "print only the content, unchanged and unsanitized")
 	return cmd
@@ -198,5 +198,3 @@ func optionalFloat(value *float64) string {
 	}
 	return strconv.FormatFloat(*value, 'g', -1, 64)
 }
-
-var errNotesPending = failure.New(failure.Internal, "", "not implemented")
