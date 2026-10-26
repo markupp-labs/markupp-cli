@@ -38,25 +38,35 @@ type Deps struct {
 // interface declared next to the commands that use it; the real *client.Client
 // satisfies all of them. To add one: a field here and a line in newServices.
 type Services struct {
-	Account   AccountReader
-	Notes     NoteService
-	NoteLinks NoteLinkReader
-	Graph     GraphReader
-	Tenants   TenantAdmin
-	Members   MemberAdmin
-	Invites   InviteInbox
+	Account       AccountReader
+	Notes         NoteService
+	NoteLinks     NoteLinkReader
+	Graph         GraphReader
+	Tenants       TenantAdmin
+	Members       MemberAdmin
+	Invites       InviteInbox
+	Vaults        VaultAdmin
+	VaultMembers  VaultMembership
+	Publication   VaultPublisher
+	Public        PublicReader
+	Notifications NotificationReader
 }
 
 // newServices wires the real client into every port.
 func newServices(api *client.Client) Services {
 	return Services{
-		Account:   api,
-		Notes:     api,
-		NoteLinks: api,
-		Graph:     api,
-		Tenants:   api,
-		Members:   api,
-		Invites:   api,
+		Account:       api,
+		Notes:         api,
+		NoteLinks:     api,
+		Graph:         api,
+		Tenants:       api,
+		Members:       api,
+		Invites:       api,
+		Vaults:        api,
+		VaultMembers:  api,
+		Publication:   api,
+		Public:        api,
+		Notifications: api,
 	}
 }
 

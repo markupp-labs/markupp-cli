@@ -24,11 +24,6 @@ type bodyFetch func(ctx context.Context, svc Services) (io.ReadCloser, error)
 // serverCall reaches the server through svc for an answer without content.
 type serverCall func(ctx context.Context, svc Services) error
 
-// addNDJSONFlag adds --ndjson to a listing the server does not paginate.
-func addNDJSONFlag(cmd *cobra.Command, ndjson *bool) {
-	cmd.Flags().BoolVar(ndjson, "ndjson", false, "print one JSON object per line, as the results stream in")
-}
-
 // listFrom renders the array fetch returns as a table, JSON or NDJSON.
 func (a *App) listFrom(cmd *cobra.Command, ndjson bool, fetch bodyFetch, columns []output.Column, row rowFunc) error {
 	r, err := a.renderer(ndjson)

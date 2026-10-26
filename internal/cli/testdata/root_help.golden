@@ -8,17 +8,19 @@ Examples:
   mu config show --json
 
 Available Commands:
-  completion  Generate the autocompletion script for the specified shell
-  config      Show and change the configuration
-  graph       Read the graph, communities and links of a vault
-  help        Help about any command
-  invites     Answer the invites addressed to the account
-  login       Log in to a server through the browser
-  logout      Revoke the stored login and remove it from the config file
-  members     Manage the members and invites of the tenant
-  notes       List, read, write and search notes
-  status      Show the server, the login and the account; tokens are never shown
-  tenants     List and create the tenants of the account
+  completion    Generate the autocompletion script for the specified shell
+  config        Show and change the configuration
+  graph         Read the graph, communities and links of a vault
+  help          Help about any command
+  invites       Answer the invites addressed to the account
+  login         Log in to a server through the browser
+  logout        Revoke the stored login and remove it from the config file
+  members       Manage the members and invites of the tenant
+  notes         List, read, write and search notes
+  notifications List the notifications of the account
+  status        Show the server, the login and the account; tokens are never shown
+  tenants       List and create the tenants of the account
+  vaults        Manage vaults, their members and their publication
 
 Flags:
       --allow-plain-http   allow http:// outside localhost, sending the token unencrypted

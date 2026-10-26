@@ -27,6 +27,8 @@ var commandConstructors = []func(*App) *cobra.Command{
 	newInvitesCmd,
 	newNotesCmd,
 	newGraphCmd,
+	newVaultsCmd,
+	newNotificationsCmd,
 }
 
 const rootExample = `  mu config set url https://markupp.example.com
