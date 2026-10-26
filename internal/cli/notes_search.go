@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -25,11 +27,15 @@ and every vault of the account when none is set. Notes appear once indexed.
 
 The results are paginated: --limit is clamped to 100 and --offset to 10000 by the
 server. They carry a snippet with the matches in [[ ]], never the note content:
-fetching content is a second call per result, with mu notes get.`
+fetching content is a second call per result, with mu notes get.
+
+--public SLUG searches a published vault instead, without credentials.
+` + publicNeedsServer
 
 const notesSearchExample = `  mu notes search kubernetes --limit 5
   mu notes search '"exact phrase" OR term -draft' --vault 3b241101-e2bb-4255-8caf-4136c566a962
-  mu notes search kubernetes --limit 3 --ndjson | jq -r .note.id | xargs -n1 mu notes get`
+  mu notes search kubernetes --limit 3 --ndjson | jq -r .note.id | xargs -n1 mu notes get
+  mu notes search kubernetes --public my-garden --limit 5`
 
 type notesSearchCmd struct {
 	app   *App
@@ -47,42 +53,52 @@ func newNotesSearchCmd(app *App) *cobra.Command {
 		Args:    exactArgs("QUERY"),
 		RunE:    func(cmd *cobra.Command, args []string) error { return c.run(cmd, args[0]) },
 	}
-	addVaultFlags(cmd, &c.vault, false)
+	addVaultFlags(cmd, &c.vault, true)
 	addListFlags(cmd, &c.list)
 	return cmd
 }
 
 func (c *notesSearchCmd) run(cmd *cobra.Command, text string) error {
-	vault, page, err := c.request(text)
+	page, r, err := c.request(text)
 	if err != nil {
 		return err
 	}
-	r, err := c.app.renderer(c.list.ndjson)
-	if err != nil {
-		return err
-	}
-	notes, err := c.app.notes(cmd.Context(), c.vault.vault)
-	if err != nil {
-		return err
-	}
-	body, err := notes.SearchNotes(cmd.Context(), text, vault, page)
+	body, err := c.fetch(cmd.Context(), text, page)
 	if err != nil {
 		return err
 	}
 	return r.list(body, searchColumns, searchRow)
 }
 
-// request validates the query and the flags, and resolves the optional vault.
-func (c *notesSearchCmd) request(text string) (string, client.Page, error) {
+// request validates the query and the flags before anything reaches the server.
+func (c *notesSearchCmd) request(text string) (client.Page, renderer, error) {
 	if strings.TrimSpace(text) == "" {
-		return "", client.Page{}, failure.New(failure.Usage, "QUERY", fmt.Sprintf("empty query %q, expected words to search", text))
+		return client.Page{}, renderer{}, failure.New(failure.Usage, "QUERY", fmt.Sprintf("empty query %q, expected words to search", text))
 	}
-	page, err := c.list.page()
-	if err != nil {
-		return "", client.Page{}, err
+	if err := c.vault.exclusive(); err != nil {
+		return client.Page{}, renderer{}, err
+	}
+	return c.app.startListing(c.list)
+}
+
+// fetch searches the public vault of --public, or the optional vault of the account.
+func (c *notesSearchCmd) fetch(ctx context.Context, text string, page client.Page) (io.ReadCloser, error) {
+	if c.vault.public != "" {
+		public, err := c.app.publicReader(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return publicRead(public.PublicSearch(ctx, c.vault.public, text, page))
 	}
 	resolved, _, err := c.app.resolve(c.vault.vault)
-	return resolved.Vault.Value, page, err
+	if err != nil {
+		return nil, err
+	}
+	notes, err := c.app.notes(ctx, c.vault.vault)
+	if err != nil {
+		return nil, err
+	}
+	return notes.SearchNotes(ctx, text, resolved.Vault.Value, page)
 }
 
 func searchRow(raw json.RawMessage) ([]string, error) {

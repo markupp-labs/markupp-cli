@@ -51,6 +51,12 @@ func (a *App) notes(ctx context.Context, vault string) (NoteService, error) {
 	if err != nil {
 		return nil, err
 	}
+	return notesOf(svc)
+}
+
+// notesOf returns the notes service of svc, and an internal failure when it is not
+// wired.
+func notesOf(svc Services) (NoteService, error) {
 	if svc.Notes == nil {
 		return nil, failure.New(failure.Internal, "", "the notes service is not wired, expected Services.Notes")
 	}

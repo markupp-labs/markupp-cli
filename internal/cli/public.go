@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
+	"github.com/markupp-labs/markupp-cli/internal/failure"
 )
 
 // PublicReader reads a published vault by its slug, without credentials. A command
@@ -28,6 +29,25 @@ func (a *App) connectVault(ctx context.Context, f vaultFlags) (Services, vaultTa
 		return Services{}, vaultTarget{}, err
 	}
 	return svc, target, nil
+}
+
+// publicReader connects without credentials and returns the reader of public vaults,
+// for a command that takes --public alone.
+func (a *App) publicReader(ctx context.Context) (PublicReader, error) {
+	svc, err := a.connect(ctx, Target{Public: true})
+	if err != nil {
+		return nil, err
+	}
+	return publicOf(svc)
+}
+
+// publicOf returns the reader of public vaults of svc, and an internal failure when
+// it is not wired.
+func publicOf(svc Services) (PublicReader, error) {
+	if svc.Public == nil {
+		return nil, failure.New(failure.Internal, "", "the public reader is not wired, expected Services.Public")
+	}
+	return svc.Public, nil
 }
 
 // publicRead passes the answer of a PublicReader call through, naming the server

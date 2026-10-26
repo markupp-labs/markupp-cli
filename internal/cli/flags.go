@@ -107,15 +107,28 @@ type vaultTarget struct {
 func addVaultFlags(cmd *cobra.Command, f *vaultFlags, allowPublic bool) {
 	cmd.Flags().StringVar(&f.vault, "vault", "", "vault id (overrides "+config.EnvVault+" and the config file)")
 	if allowPublic {
-		cmd.Flags().StringVar(&f.public, "public", "", "read the public vault with this slug, without credentials (requires a server with "+featurePublication+")")
+		addPublicFlag(cmd, &f.public)
 	}
+}
+
+// addPublicFlag adds --public alone, for a command that takes no vault id.
+func addPublicFlag(cmd *cobra.Command, slug *string) {
+	cmd.Flags().StringVar(slug, "public", "", "read the public vault with this slug, without credentials (requires a server with "+featurePublication+")")
+}
+
+// exclusive refuses --vault and --public together.
+func (f vaultFlags) exclusive() error {
+	if f.public == "" || f.vault == "" {
+		return nil
+	}
+	message := fmt.Sprintf("--vault %q and --public %q are exclusive, expected one of them", f.vault, f.public)
+	return failure.New(failure.Usage, "", message)
 }
 
 // resolveVault applies --public, then --vault > MARKUPP_VAULT > config file.
 func (a *App) resolveVault(f vaultFlags) (vaultTarget, error) {
-	if f.public != "" && f.vault != "" {
-		message := fmt.Sprintf("--vault %q and --public %q are exclusive, expected one of them", f.vault, f.public)
-		return vaultTarget{}, failure.New(failure.Usage, "", message)
+	if err := f.exclusive(); err != nil {
+		return vaultTarget{}, err
 	}
 	if f.public != "" {
 		return vaultTarget{PublicSlug: f.public}, nil

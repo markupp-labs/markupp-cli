@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -21,10 +22,13 @@ const updatedWidth = 30
 
 var noteListColumns = []output.Column{{Name: "ID", Width: 36}, {Name: "UPDATED", Width: updatedWidth}, {Name: "PATH"}}
 
-const notesListLong = `List the notes of a vault, by path, without their content.
+const notesListLong = `List the notes of a vault, by path, without their content. --public SLUG
+lists a published vault instead, without credentials.
 
 The listing is paginated: --limit is clamped to 100 and --offset to 10000 by the
-server. Fetch a note's content with mu notes get, one call per note.`
+server. Fetch a note's content with mu notes get, one call per note.
+
+` + publicNeedsServer
 
 type notesListCmd struct {
 	app   *App
@@ -39,43 +43,46 @@ func newNotesListCmd(app *App) *cobra.Command {
 		Short: "List the notes of a vault, without content",
 		Long:  notesListLong,
 		Example: `  mu notes list --vault 3b241101-e2bb-4255-8caf-4136c566a962 --limit 20
-  mu notes list --limit 100 --offset 100 --ndjson | jq -r .path`,
+  mu notes list --limit 100 --offset 100 --ndjson | jq -r .path
+  mu notes list --public my-garden --limit 20`,
 		Args: exactArgs(),
 		RunE: func(cmd *cobra.Command, _ []string) error { return c.run(cmd) },
 	}
-	addVaultFlags(cmd, &c.vault, false)
+	addVaultFlags(cmd, &c.vault, true)
 	addListFlags(cmd, &c.list)
 	return cmd
 }
 
 func (c *notesListCmd) run(cmd *cobra.Command) error {
-	target, page, err := c.request()
+	page, r, err := c.app.startListing(c.list)
 	if err != nil {
 		return err
 	}
-	r, err := c.app.renderer(c.list.ndjson)
-	if err != nil {
-		return err
-	}
-	notes, err := c.app.notes(cmd.Context(), c.vault.vault)
-	if err != nil {
-		return err
-	}
-	body, err := notes.ListNotes(cmd.Context(), target.ID, page)
+	body, err := c.fetch(cmd.Context(), page)
 	if err != nil {
 		return err
 	}
 	return r.list(body, noteListColumns, noteListRow)
 }
 
-// request validates the flags before anything reaches the server.
-func (c *notesListCmd) request() (vaultTarget, client.Page, error) {
-	target, err := c.app.resolveVault(c.vault)
+// fetch lists the vault of the account, or the public one with --public.
+func (c *notesListCmd) fetch(ctx context.Context, page client.Page) (io.ReadCloser, error) {
+	svc, target, err := c.app.connectVault(ctx, c.vault)
 	if err != nil {
-		return vaultTarget{}, client.Page{}, err
+		return nil, err
 	}
-	page, err := c.list.page()
-	return target, page, err
+	if target.PublicSlug != "" {
+		public, err := publicOf(svc)
+		if err != nil {
+			return nil, err
+		}
+		return publicRead(public.PublicNotes(ctx, target.PublicSlug, client.NoteFilter{}, page))
+	}
+	notes, err := notesOf(svc)
+	if err != nil {
+		return nil, err
+	}
+	return notes.ListNotes(ctx, target.ID, page)
 }
 
 func noteListRow(raw json.RawMessage) ([]string, error) {
@@ -90,11 +97,15 @@ const notesGetLong = `Print a note: its metadata, then its content between two d
 carry a hash of the content, so the content cannot fake the end of the block.
 
 The content is sanitized for the terminal. --content prints only the content, byte
-for byte and unsanitized, to save it to a file and edit it back with mu notes edit.`
+for byte and unsanitized, to save it to a file and edit it back with mu notes edit.
+--public SLUG reads the note from a published vault, without credentials.
+
+` + publicNeedsServer
 
 type notesGetCmd struct {
 	app     *App
 	content bool
+	public  string
 }
 
 func newNotesGetCmd(app *App) *cobra.Command {
@@ -105,11 +116,13 @@ func newNotesGetCmd(app *App) *cobra.Command {
 		Long:  notesGetLong,
 		Example: `  mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479
   mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --content > meeting.md
-  mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --json | jq -r .updated_at`,
+  mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --json | jq -r .updated_at
+  mu notes get f47ac10b-58cc-4372-a567-0e02b2c3d479 --public my-garden`,
 		Args: exactArgs("ID"),
 		RunE: func(cmd *cobra.Command, args []string) error { return c.run(cmd, args[0]) },
 	}
 	cmd.Flags().BoolVar(&c.content, "content", false, "print only the content, unchanged and unsanitized")
+	addPublicFlag(cmd, &c.public)
 	return cmd
 }
 
@@ -117,15 +130,27 @@ func (c *notesGetCmd) run(cmd *cobra.Command, id string) error {
 	if c.content && c.app.global.json {
 		return failure.New(failure.Usage, "", "--content and --json are exclusive, expected at most one")
 	}
-	notes, err := c.app.notes(cmd.Context(), "")
-	if err != nil {
-		return err
-	}
-	body, err := notes.GetNote(cmd.Context(), id)
+	body, err := c.fetch(cmd.Context(), id)
 	if err != nil {
 		return err
 	}
 	return c.app.renderNote(body, c.print)
+}
+
+// fetch reads note id from the account, or from the public vault with --public.
+func (c *notesGetCmd) fetch(ctx context.Context, id string) (io.ReadCloser, error) {
+	if c.public != "" {
+		public, err := c.app.publicReader(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return publicRead(public.PublicNote(ctx, c.public, id))
+	}
+	notes, err := c.app.notes(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+	return notes.GetNote(ctx, id)
 }
 
 func (c *notesGetCmd) print(p *output.Printer, note schema.Note) error {
