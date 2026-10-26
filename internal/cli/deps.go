@@ -28,6 +28,8 @@ type Deps struct {
 type Services struct {
 	Vaults       VaultAdmin
 	VaultMembers VaultMembership
+	Publication  VaultPublisher
+	Public       PublicReader
 }
 
 // newServices wires the real client into every port.
