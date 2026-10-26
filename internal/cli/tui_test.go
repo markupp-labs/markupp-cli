@@ -109,15 +109,6 @@ func TestTUIConnectorSwitchesTheTenant(t *testing.T) {
 	}
 }
 
-func TestTUIConnectorRefusesPublicVaultsForNow(t *testing.T) {
-	mu := tuiMu()
-	mu.run(t, "tui").expectCode(t, 0)
-	_, err := mu.tui.onlyConfig(t).Connect(context.Background(), tui.Scope{PublicSlug: "garden"})
-	if failure.KindOf(err) != failure.NotFound || !strings.Contains(err.Error(), "garden") {
-		t.Errorf("Connect public = %v, want a not found naming the slug", err)
-	}
-}
-
 func TestTUISessionShowsTheLoginExpiryNeverTheToken(t *testing.T) {
 	mu := tuiMu()
 	expires := time.Date(2026, 5, 15, 13, 0, 0, 0, time.UTC)
