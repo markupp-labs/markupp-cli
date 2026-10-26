@@ -85,7 +85,7 @@ func (a *App) connect(ctx context.Context, target Target) (Services, error) {
 	return a.factory()(ctx, Connection{
 		Resolved: resolved, Settings: settings, Store: a.deps.Store,
 		AllowPlainHTTP: a.global.allowPlainHTTP, Public: target.Public,
-		Logger: a.requestLogger(), UserAgent: "mu/" + a.deps.Version,
+		Logger: a.requestLogger(), UserAgent: "mu/" + a.deps.Version, Clock: a.deps.Clock,
 	})
 }
 
@@ -107,5 +107,5 @@ func (a *App) requestLogger() *slog.Logger {
 
 func errNoServer() error {
 	return failure.New(failure.Usage, "", "no Markupp server configured").
-		WithHint("run mu config set url https://markupp.example.com, set " + config.EnvURL + ", or pass --url")
+		WithHint("run mu login https://markupp.example.com or mu config set url https://markupp.example.com, set " + config.EnvURL + ", or pass --url")
 }
