@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -15,8 +16,8 @@ func requestError(t *testing.T, reply http.HandlerFunc) *failure.Error {
 	server := newFakeServer(t, reply)
 	c := newTestClient(t, server, "")
 	err := c.exec(context.Background(), request{method: http.MethodGet, path: endpoint("notes", "n1")})
-	failed, ok := err.(*failure.Error)
-	if !ok {
+	var failed *failure.Error
+	if !errors.As(err, &failed) {
 		t.Fatalf("exec error = %#v, want *failure.Error", err)
 	}
 	return failed

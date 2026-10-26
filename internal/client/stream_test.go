@@ -103,4 +103,3 @@ func TestSetNonEmptySkipsBlankValues(t *testing.T) {
 		t.Errorf("query = %q, want q=kubernetes", got)
 	}
 }
-

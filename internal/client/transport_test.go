@@ -164,8 +164,7 @@ func TestRedirectToAnotherHostDropsCredentials(t *testing.T) {
 }
 
 func TestRedirectOnTheSameHostKeepsCredentials(t *testing.T) {
-	var server *fakeServer
-	server = newFakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+	server := newFakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/old" {
 			http.Redirect(w, r, "/v1/new", http.StatusMovedPermanently)
 			return
