@@ -39,7 +39,8 @@ sanitized and between delimiter lines, and raw only with mu notes get --content.
 func newNotesCmd(app *App) *cobra.Command {
 	cmd := newGroup("notes", "List, read, write and search notes", "  mu notes list --vault <vault id> --limit 5\n  mu notes get <note id>")
 	cmd.Long = notesLong
-	cmd.AddCommand(newNotesListCmd(app), newNotesGetCmd(app), newNotesSearchCmd(app))
+	cmd.AddCommand(newNotesListCmd(app), newNotesGetCmd(app), newNotesSearchCmd(app),
+		newNotesCreateCmd(app), newNotesEditCmd(app), newNotesDeleteCmd(app))
 	return cmd
 }
 

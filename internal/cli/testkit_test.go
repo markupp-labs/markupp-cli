@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"io"
 	"testing"
 
 	"github.com/markupp-labs/markupp-cli/internal/config"
@@ -65,6 +66,8 @@ type testMu struct {
 	env    fakeEnv
 	store  *fakeConfigStore
 	server *fakeServer
+	stdin  io.Reader
+	files  fakeFiles
 }
 
 func newTestMu() *testMu {
@@ -79,6 +82,7 @@ func (m *testMu) deps(stdout, stderr *bytes.Buffer) Deps {
 	return Deps{
 		Stdout: stdout, Stderr: stderr, Env: m.env.lookup, Store: m.store,
 		Version: "1.2.3", Connect: m.server.connect,
+		Stdin: m.stdin, ReadFile: m.files.read,
 	}
 }
 

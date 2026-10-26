@@ -20,6 +20,10 @@ type Deps struct {
 	Version string
 	// Connect builds the Services; nil means the real server through internal/client.
 	Connect ServiceFactory
+	// Stdin is read only when a command is told to, as with --file -.
+	Stdin io.Reader
+	// ReadFile reads a file named by a flag; nil means os.ReadFile.
+	ReadFile func(name string) ([]byte, error)
 }
 
 // Services are the ports the commands reach the server through. Each port is a small

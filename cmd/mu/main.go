@@ -19,6 +19,7 @@ func main() {
 	code := cli.Execute(ctx, cli.Deps{
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
+		Stdin:   os.Stdin,
 		Env:     os.LookupEnv,
 		Store:   config.DefaultStore(os.LookupEnv),
 		Version: version,
