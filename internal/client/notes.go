@@ -2,40 +2,55 @@ package client
 
 import (
 	"context"
-	"errors"
 	"io"
+	"net/http"
+	"net/url"
 
 	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
-var errNotesPending = errors.New("not implemented")
-
-// ListNotes streams the notes of vault, without their content.
-func (c *Client) ListNotes(context.Context, string, Page) (io.ReadCloser, error) {
-	return nil, errNotesPending
+// ListNotes streams the notes of vault, without their content, one page at a time.
+func (c *Client) ListNotes(ctx context.Context, vault string, page Page) (io.ReadCloser, error) {
+	query := url.Values{}
+	page.apply(query)
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("vaults", vault, "notes"), query: query})
 }
 
-// GetNote reads one note with its content.
-func (c *Client) GetNote(context.Context, string) (io.ReadCloser, error) {
-	return nil, errNotesPending
+// GetNote reads one note with its content and derived organization.
+func (c *Client) GetNote(ctx context.Context, id string) (io.ReadCloser, error) {
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("notes", id)})
 }
 
-// SearchNotes runs a lexical search.
-func (c *Client) SearchNotes(context.Context, string, string, Page) (io.ReadCloser, error) {
-	return nil, errNotesPending
+// SearchNotes runs a lexical search in vault, or in every vault of the account when
+// vault is empty. The results carry a snippet, never the note content.
+func (c *Client) SearchNotes(ctx context.Context, text, vault string, page Page) (io.ReadCloser, error) {
+	query := url.Values{"q": {text}}
+	setNonEmpty(query, "vault", vault)
+	page.apply(query)
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("search", "notes"), query: query})
 }
 
-// CreateNote creates a note in vault.
-func (c *Client) CreateNote(context.Context, string, schema.NoteCreateRequest) (io.ReadCloser, error) {
-	return nil, errNotesPending
+// CreateNote creates a note in vault and returns the created note.
+func (c *Client) CreateNote(ctx context.Context, vault string, note schema.NoteCreateRequest) (io.ReadCloser, error) {
+	body, err := marshalBody(note)
+	if err != nil {
+		return nil, err
+	}
+	return c.open(ctx, request{method: http.MethodPost, path: endpoint("vaults", vault, "notes"), body: body})
 }
 
-// UpdateNote writes a note.
-func (c *Client) UpdateNote(context.Context, string, schema.NoteUpdateRequest) (io.ReadCloser, error) {
-	return nil, errNotesPending
+// UpdateNote writes path and content of note id. The server answers 409 when the note
+// changed since update.LastModifiedAt and update.Force is false; that conflict is
+// returned as is, never retried.
+func (c *Client) UpdateNote(ctx context.Context, id string, update schema.NoteUpdateRequest) (io.ReadCloser, error) {
+	body, err := marshalBody(update)
+	if err != nil {
+		return nil, err
+	}
+	return c.open(ctx, request{method: http.MethodPut, path: endpoint("notes", id), body: body})
 }
 
-// DeleteNote deletes a note.
-func (c *Client) DeleteNote(context.Context, string) error {
-	return errNotesPending
+// DeleteNote deletes note id.
+func (c *Client) DeleteNote(ctx context.Context, id string) error {
+	return c.exec(ctx, request{method: http.MethodDelete, path: endpoint("notes", id)})
 }
