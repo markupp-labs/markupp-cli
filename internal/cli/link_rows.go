@@ -12,8 +12,11 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
-// The values the API accepts for the type filter of a link listing.
-var linkTypes = []string{"explicit", "embed", "typed", "inferred"}
+// The values the API accepts for the type and status filters of a link listing.
+var (
+	linkTypes    = []string{"explicit", "embed", "typed", "inferred"}
+	linkStatuses = []string{"resolved", "unresolved"}
+)
 
 const (
 	linkTypeHelp = "only links of this type: explicit, embed, typed or inferred"
