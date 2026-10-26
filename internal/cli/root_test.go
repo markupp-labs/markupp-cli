@@ -2,10 +2,11 @@ package cli
 
 import (
 	"context"
-
-	"github.com/spf13/cobra"
+	"os"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 
 	"github.com/markupp-labs/markupp-cli/internal/failure"
 	"github.com/markupp-labs/markupp-cli/internal/output/outputtest"
@@ -21,6 +22,19 @@ func TestRootHelpFitsOneScreen(t *testing.T) {
 }
 
 func TestBareMuPrintsHelp(t *testing.T) {
+	run := newTestMu().run(t)
+	run.expectCode(t, 0)
+	if !strings.Contains(run.stdout, "Available Commands") {
+		t.Errorf("bare mu printed %q, want the help", run.stdout)
+	}
+}
+
+// TestBareMuIgnoresTheTestBinaryArguments guards the test kit: with no arguments, a
+// nil slice would make cobra read os.Args, which go test fills with its own flags.
+func TestBareMuIgnoresTheTestBinaryArguments(t *testing.T) {
+	saved := os.Args
+	t.Cleanup(func() { os.Args = saved })
+	os.Args = []string{"mu.test", "status"}
 	run := newTestMu().run(t)
 	run.expectCode(t, 0)
 	if !strings.Contains(run.stdout, "Available Commands") {
