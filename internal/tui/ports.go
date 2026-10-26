@@ -18,7 +18,7 @@ import (
 
 // NoteStore reads and writes notes.
 type NoteStore interface {
-	ListNotes(ctx context.Context, vault string, page client.Page) (io.ReadCloser, error)
+	ListNotes(ctx context.Context, vault string, filter client.NoteFilter, page client.Page) (io.ReadCloser, error)
 	GetNote(ctx context.Context, id string) (io.ReadCloser, error)
 	SearchNotes(ctx context.Context, text, vault string, page client.Page) (io.ReadCloser, error)
 	UpdateNote(ctx context.Context, id string, update schema.NoteUpdateRequest) (io.ReadCloser, error)

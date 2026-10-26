@@ -36,11 +36,18 @@ func newNotesView(s *shell, vault string) *listView {
 		resource: "notes",
 		context:  vault,
 		columns:  []string{"PATH", "UPDATED", "DEGREE", "RANK", "COMMUNITY", "ID"},
-		load:     arrayOf(func(ctx context.Context) (io.ReadCloser, error) { return s.ports.Notes.ListNotes(ctx, vault, listPage) }, rowsOf(noteListRow)),
+		load:     arrayOf(s.listNotes(vault), rowsOf(noteListRow)),
 		enter:    func(r record) { s.viewNote(r.note) },
 		keys:     s.noteKeys,
 		search:   func(term string) { s.push(newSearchView(s, vault, term)) },
 	})
+}
+
+// listNotes reads the first page of the notes of vault, unfiltered.
+func (s *shell) listNotes(vault string) fetchBody {
+	return func(ctx context.Context) (io.ReadCloser, error) {
+		return s.ports.Notes.ListNotes(ctx, vault, client.NoteFilter{}, listPage)
+	}
 }
 
 func noteListRow(note schema.NoteListItem) record {

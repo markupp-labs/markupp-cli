@@ -13,7 +13,7 @@ import (
 
 // NoteReader reads notes: the listing of a vault, one note, and the search.
 type NoteReader interface {
-	ListNotes(ctx context.Context, vault string, page client.Page) (io.ReadCloser, error)
+	ListNotes(ctx context.Context, vault string, filter client.NoteFilter, page client.Page) (io.ReadCloser, error)
 	GetNote(ctx context.Context, id string) (io.ReadCloser, error)
 	SearchNotes(ctx context.Context, text, vault string, page client.Page) (io.ReadCloser, error)
 }

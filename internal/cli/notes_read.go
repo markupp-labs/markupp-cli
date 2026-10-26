@@ -25,15 +25,21 @@ var noteListColumns = []output.Column{{Name: "ID", Width: 36}, {Name: "UPDATED",
 const notesListLong = `List the notes of a vault, by path, without their content. --public SLUG
 lists a published vault instead, without credentials.
 
+--orphan keeps the notes without any link, --community N those of one community
+(ids from mu graph communities), and --sort orders by pagerank, degree or updated
+time, descending unless --direction asc. Notes the indexer has not ranked yet
+have no community and come last in those orders.
+
 The listing is paginated: --limit is clamped to 100 and --offset to 10000 by the
 server. Fetch a note's content with mu notes get, one call per note.
 
 ` + publicNeedsServer
 
 type notesListCmd struct {
-	app   *App
-	vault vaultFlags
-	list  listFlags
+	app    *App
+	vault  vaultFlags
+	list   listFlags
+	filter noteFilterFlags
 }
 
 func newNotesListCmd(app *App) *cobra.Command {
@@ -44,21 +50,28 @@ func newNotesListCmd(app *App) *cobra.Command {
 		Long:  notesListLong,
 		Example: `  mu notes list --vault 3b241101-e2bb-4255-8caf-4136c566a962 --limit 20
   mu notes list --limit 100 --offset 100 --ndjson | jq -r .path
+  mu notes list --sort pagerank --limit 10
+  mu notes list --orphan --ndjson | jq -r .path
   mu notes list --public my-garden --limit 20`,
 		Args: exactArgs(),
 		RunE: func(cmd *cobra.Command, _ []string) error { return c.run(cmd) },
 	}
 	addVaultFlags(cmd, &c.vault, true)
 	addListFlags(cmd, &c.list)
+	addNoteFilterFlags(cmd, &c.filter)
 	return cmd
 }
 
 func (c *notesListCmd) run(cmd *cobra.Command) error {
+	filter, err := c.filter.noteFilter(cmd)
+	if err != nil {
+		return err
+	}
 	page, r, err := c.app.startListing(c.list)
 	if err != nil {
 		return err
 	}
-	body, err := c.fetch(cmd.Context(), page)
+	body, err := c.fetch(cmd.Context(), filter, page)
 	if err != nil {
 		return err
 	}
@@ -66,7 +79,7 @@ func (c *notesListCmd) run(cmd *cobra.Command) error {
 }
 
 // fetch lists the vault of the account, or the public one with --public.
-func (c *notesListCmd) fetch(ctx context.Context, page client.Page) (io.ReadCloser, error) {
+func (c *notesListCmd) fetch(ctx context.Context, filter client.NoteFilter, page client.Page) (io.ReadCloser, error) {
 	svc, target, err := c.app.connectVault(ctx, c.vault)
 	if err != nil {
 		return nil, err
@@ -76,13 +89,13 @@ func (c *notesListCmd) fetch(ctx context.Context, page client.Page) (io.ReadClos
 		if err != nil {
 			return nil, err
 		}
-		return publicRead(public.PublicNotes(ctx, target.PublicSlug, client.NoteFilter{}, page))
+		return publicRead(public.PublicNotes(ctx, target.PublicSlug, filter, page))
 	}
 	notes, err := notesOf(svc)
 	if err != nil {
 		return nil, err
 	}
-	return notes.ListNotes(ctx, target.ID, page)
+	return notes.ListNotes(ctx, target.ID, filter, page)
 }
 
 func noteListRow(raw json.RawMessage) ([]string, error) {

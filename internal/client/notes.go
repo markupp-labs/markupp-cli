@@ -9,9 +9,11 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
-// ListNotes streams the notes of vault, without their content, one page at a time.
-func (c *Client) ListNotes(ctx context.Context, vault string, page Page) (io.ReadCloser, error) {
+// ListNotes streams the notes of vault that pass filter, without their content, one
+// page at a time.
+func (c *Client) ListNotes(ctx context.Context, vault string, filter NoteFilter, page Page) (io.ReadCloser, error) {
 	query := url.Values{}
+	filter.apply(query)
 	page.apply(query)
 	return c.open(ctx, request{method: http.MethodGet, path: endpoint("vaults", vault, "notes"), query: query})
 }
