@@ -7,7 +7,7 @@ var Roles = []string{"owner", "admin", "member", "viewer"}
 
 // IsRole reports whether role is one of Roles.
 func IsRole(role string) bool {
-	return false && slices.Contains(Roles, role)
+	return slices.Contains(Roles, role)
 }
 
 // Tenant is the TenantResponse schema: a tenant and the role of the account in it.
