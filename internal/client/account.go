@@ -2,21 +2,23 @@ package client
 
 import (
 	"context"
-	"errors"
 	"io"
+	"net/http"
 )
 
-// GetHealth reads the health probe.
-func (c *Client) GetHealth(context.Context) (io.ReadCloser, error) {
-	return nil, errors.New("not implemented")
+// GetHealth reads GET /healthz, the probe that needs no token. A 503 is an error of
+// kind Unavailable.
+func (c *Client) GetHealth(ctx context.Context) (io.ReadCloser, error) {
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("healthz")})
 }
 
-// GetAuthenticatedUser reads the account.
-func (c *Client) GetAuthenticatedUser(context.Context) (io.ReadCloser, error) {
-	return nil, errors.New("not implemented")
+// GetAuthenticatedUser reads GET /auth/me, the account of the token.
+func (c *Client) GetAuthenticatedUser(ctx context.Context) (io.ReadCloser, error) {
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("auth", "me")})
 }
 
-// ListMyTenants lists the tenants of the account.
-func (c *Client) ListMyTenants(context.Context) (io.ReadCloser, error) {
-	return nil, errors.New("not implemented")
+// ListMyTenants reads GET /me/tenants, the tenants of the account with its role in
+// each.
+func (c *Client) ListMyTenants(ctx context.Context) (io.ReadCloser, error) {
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("me", "tenants")})
 }
