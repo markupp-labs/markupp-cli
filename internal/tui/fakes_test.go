@@ -83,7 +83,7 @@ func (f *fakeAPI) sentUpdates() []schema.NoteUpdateRequest {
 	return append([]schema.NoteUpdateRequest(nil), f.updates...)
 }
 
-func (f *fakeAPI) ListNotes(_ context.Context, vault string, _ client.Page) (io.ReadCloser, error) {
+func (f *fakeAPI) ListNotes(_ context.Context, vault string, _ client.NoteFilter, _ client.Page) (io.ReadCloser, error) {
 	return f.answer("list", vault)
 }
 

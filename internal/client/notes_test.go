@@ -10,7 +10,7 @@ import (
 
 func TestListNotesReadsTheVaultCollection(t *testing.T) {
 	server := newFakeServer(t, replyJSON(200, `[]`))
-	body, err := newTestClient(t, server, "").ListNotes(context.Background(), "v/1", Page{Limit: 5, Offset: 2})
+	body, err := newTestClient(t, server, "").ListNotes(context.Background(), "v/1", NoteFilter{}, Page{Limit: 5, Offset: 2})
 	if err != nil {
 		t.Fatalf("ListNotes: %v", err)
 	}
@@ -20,6 +20,18 @@ func TestListNotesReadsTheVaultCollection(t *testing.T) {
 	got := server.seen()[0]
 	if got.method != "GET" || got.path != "/v1/vaults/v%2F1/notes" || got.query != "limit=5&offset=2" {
 		t.Errorf("request = %+v", got)
+	}
+}
+
+func TestListNotesSendsTheFilters(t *testing.T) {
+	server := newFakeServer(t, replyJSON(200, `[]`))
+	orphan, community := false, int64(3)
+	filter := NoteFilter{Orphan: &orphan, Community: &community, Sort: "degree", Direction: "asc"}
+	if err := opened(newTestClient(t, server, "").ListNotes(context.Background(), "v1", filter, Page{Limit: 5})); err != nil {
+		t.Fatalf("ListNotes: %v", err)
+	}
+	if got := server.seen()[0].query; got != "community=3&direction=asc&limit=5&orphan=false&sort=degree" {
+		t.Errorf("query = %q", got)
 	}
 }
 

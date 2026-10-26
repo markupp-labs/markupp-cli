@@ -30,7 +30,7 @@ func TestNotesListReadsAPublicVault(t *testing.T) {
 	run := mu.run(t, "notes", "list", "--public", "garden", "--limit", "5")
 	run.expectCode(t, 0)
 	outputtest.Golden(t, "notes_list", []byte(run.stdout))
-	expectPublicCall(t, mu, notes, noteCall{method: "public list", slug: "garden", page: client.Page{Limit: 5}})
+	expectPublicCall(t, mu, notes, noteCall{method: "public list", slug: "garden", filter: noFilter, page: client.Page{Limit: 5}})
 }
 
 func TestNotesGetReadsAPublicNote(t *testing.T) {

@@ -32,7 +32,7 @@ func TestNotesListPrintsATable(t *testing.T) {
 	run := notesMu(notes).run(t, "notes", "list", "--vault", "v1", "--limit", "5", "--offset", "10")
 	run.expectCode(t, 0)
 	outputtest.Golden(t, "notes_list", []byte(run.stdout))
-	want := noteCall{method: "list", vault: "v1", page: client.Page{Limit: 5, Offset: 10}}
+	want := noteCall{method: "list", vault: "v1", filter: noFilter, page: client.Page{Limit: 5, Offset: 10}}
 	if notes.calls[0] != want {
 		t.Errorf("call = %+v, want %+v", notes.calls[0], want)
 	}

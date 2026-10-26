@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
@@ -15,6 +17,7 @@ type noteCall struct {
 	id     string
 	vault  string
 	slug   string
+	filter string
 	text   string
 	page   client.Page
 	create schema.NoteCreateRequest
@@ -41,8 +44,23 @@ func (f *fakeNotes) answer(call noteCall) (io.ReadCloser, error) {
 	return io.NopCloser(strings.NewReader(f.replies[call.method])), nil
 }
 
-func (f *fakeNotes) ListNotes(_ context.Context, vault string, page client.Page) (io.ReadCloser, error) {
-	return f.answer(noteCall{method: "list", vault: vault, page: page})
+func (f *fakeNotes) ListNotes(_ context.Context, vault string, filter client.NoteFilter, page client.Page) (io.ReadCloser, error) {
+	return f.answer(noteCall{method: "list", vault: vault, filter: describeFilter(filter), page: page})
+}
+
+// noFilter is how describeFilter spells a listing without filters.
+var noFilter = describeFilter(client.NoteFilter{})
+
+// describeFilter spells out filter, so a recorded call compares by value.
+func describeFilter(filter client.NoteFilter) string {
+	orphan, community := "-", "-"
+	if filter.Orphan != nil {
+		orphan = strconv.FormatBool(*filter.Orphan)
+	}
+	if filter.Community != nil {
+		community = strconv.FormatInt(*filter.Community, 10)
+	}
+	return fmt.Sprintf("orphan=%s community=%s sort=%q direction=%q", orphan, community, filter.Sort, filter.Direction)
 }
 
 func (f *fakeNotes) GetNote(_ context.Context, id string) (io.ReadCloser, error) {
@@ -53,8 +71,8 @@ func (f *fakeNotes) SearchNotes(_ context.Context, text, vault string, page clie
 	return f.answer(noteCall{method: "search", text: text, vault: vault, page: page})
 }
 
-func (f *fakeNotes) PublicNotes(_ context.Context, slug string, _ client.NoteFilter, page client.Page) (io.ReadCloser, error) {
-	return f.answer(noteCall{method: "public list", slug: slug, page: page})
+func (f *fakeNotes) PublicNotes(_ context.Context, slug string, filter client.NoteFilter, page client.Page) (io.ReadCloser, error) {
+	return f.answer(noteCall{method: "public list", slug: slug, filter: describeFilter(filter), page: page})
 }
 
 func (f *fakeNotes) PublicNote(_ context.Context, slug, id string) (io.ReadCloser, error) {
