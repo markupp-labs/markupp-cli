@@ -2,11 +2,12 @@ package client
 
 import (
 	"context"
-	"errors"
 	"io"
+	"net/http"
 )
 
-// Notifications returns the notification feed of the account.
-func (c *Client) Notifications(context.Context) (io.ReadCloser, error) {
-	return nil, errors.New("not implemented")
+// Notifications returns the notification feed of the account: the items that ask for
+// its attention and how many of them are unread.
+func (c *Client) Notifications(ctx context.Context) (io.ReadCloser, error) {
+	return c.open(ctx, request{method: http.MethodGet, path: endpoint("me", "notifications")})
 }
