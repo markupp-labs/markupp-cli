@@ -9,34 +9,6 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
-// memberRecord is a member of the tenant or of a vault (MemberResponse).
-type memberRecord struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Role     string `json:"role"`
-	JoinedAt string `json:"joined_at"`
-}
-
-// inviteRecord is an invite addressed to the account (PendingInviteResponse).
-type inviteRecord struct {
-	ID         string `json:"id"`
-	TenantName string `json:"tenant_name"`
-	Role       string `json:"role"`
-	ExpiresAt  string `json:"expires_at"`
-}
-
-// notificationFeed is the feed of the account (NotificationFeedResponse).
-type notificationFeed struct {
-	Items  []notificationRecord `json:"items"`
-	Unread int                  `json:"unread"`
-}
-
-// notificationRecord is one item of the feed; an invite carries the invite fields.
-type notificationRecord struct {
-	Kind string `json:"kind"`
-	inviteRecord
-}
-
 // homeView is the first view of a scope: the notes of the vault, the vaults, or the
 // tenants, whichever this build and scope can show.
 func (s *shell) homeView() View {
@@ -104,7 +76,7 @@ func newMembersView(s *shell, resource, context string, fetch fetchBody) *listVi
 	})
 }
 
-func memberRow(member memberRecord) record {
+func memberRow(member schema.Member) record {
 	return record{id: member.ID, label: member.Email, cells: []string{member.Email, member.Role, member.JoinedAt, member.ID}}
 }
 
@@ -122,8 +94,20 @@ func openInvites(s *shell, _ string) error {
 	return nil
 }
 
-func inviteRow(invite inviteRecord) record {
-	return record{id: invite.ID, label: invite.TenantName, cells: []string{invite.TenantName, invite.Role, invite.ExpiresAt, invite.ID}}
+func inviteRow(invite schema.PendingInvite) record {
+	return invitedRow(invite.ID, invite.TenantName, invite.Role, invite.ExpiresAt)
+}
+
+// invitedRow is the row of an invite to tenantName, alone or as a notification.
+func invitedRow(id, tenantName, role, expiresAt string) record {
+	return record{id: id, label: tenantName, cells: []string{tenantName, role, expiresAt, id}}
+}
+
+// notificationRow is an item of the feed: its kind, then the fields of the invite.
+func notificationRow(item schema.Notification) record {
+	row := invitedRow(item.ID, item.TenantName, item.Role, item.ExpiresAt)
+	row.cells = append([]string{item.Kind}, row.cells...)
+	return row
 }
 
 // openNotifications is :notifications, the feed of the account.
@@ -145,11 +129,10 @@ func (s *shell) readNotifications(ctx context.Context) ([]record, error) {
 	if err != nil {
 		return nil, err
 	}
-	feed, err := decodeBody[notificationFeed](body)
+	feed, err := decodeBody[schema.NotificationFeed](body)
 	rows := make([]record, 0, len(feed.Items))
 	for _, item := range feed.Items {
-		row := inviteRow(item.inviteRecord)
-		rows = append(rows, record{id: row.id, label: row.label, cells: append([]string{item.Kind}, row.cells...)})
+		rows = append(rows, notificationRow(item))
 	}
 	return rows, err
 }

@@ -1,11 +1,6 @@
 package tui
 
-// vaultRecord is a vault of the tenant (VaultResponse).
-type vaultRecord struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	CreatedAt string `json:"created_at"`
-}
+import "github.com/markupp-labs/markupp-cli/internal/schema"
 
 // openVaults is :vaults.
 func openVaults(s *shell, _ string) error {
@@ -27,7 +22,7 @@ func newVaultsView(s *shell) *listView {
 	})
 }
 
-func vaultRow(vault vaultRecord) record {
+func vaultRow(vault schema.Vault) record {
 	return record{id: vault.ID, label: vault.Name, cells: []string{vault.Name, vault.CreatedAt, vault.ID}}
 }
 

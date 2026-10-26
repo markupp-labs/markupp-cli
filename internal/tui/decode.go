@@ -15,7 +15,7 @@ import (
 type payload interface {
 	schema.Note | schema.NoteListItem | schema.SearchHit | schema.Link | schema.Mention |
 		schema.LinkSuggestion | schema.Graph | schema.Community | schema.User |
-		schema.MyTenant | vaultRecord | memberRecord | inviteRecord | notificationFeed
+		schema.MyTenant | schema.Vault | schema.Member | schema.PendingInvite | schema.NotificationFeed
 }
 
 // decodeRaw decodes one record, naming it when it does not have the expected shape.
