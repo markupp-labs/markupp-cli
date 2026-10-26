@@ -26,10 +26,11 @@ type Deps struct {
 // interface declared next to the commands that use it; the real *client.Client
 // satisfies all of them. To add one: a field here and a line in newServices.
 type Services struct {
-	Vaults       VaultAdmin
-	VaultMembers VaultMembership
-	Publication  VaultPublisher
-	Public       PublicReader
+	Vaults        VaultAdmin
+	VaultMembers  VaultMembership
+	Publication   VaultPublisher
+	Public        PublicReader
+	Notifications NotificationReader
 }
 
 // newServices wires the real client into every port.
