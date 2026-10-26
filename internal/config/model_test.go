@@ -53,7 +53,6 @@ func TestSetRejectsEmptyValue(t *testing.T) {
 func TestNormalizeURL(t *testing.T) {
 	cases := map[string]string{
 		"https://markupp.example.com/": "https://markupp.example.com",
-		" http://localhost:8080 ":      "http://localhost:8080",
 		"https://example.com/markupp/": "https://example.com/markupp",
 	}
 	for in, want := range cases {
@@ -61,6 +60,13 @@ func TestNormalizeURL(t *testing.T) {
 		if err != nil || got != want {
 			t.Errorf("NormalizeURL(%q) = %q, %v, want %q", in, got, err, want)
 		}
+	}
+}
+
+func TestNormalizeURLTrimsSpaces(t *testing.T) {
+	got, err := NormalizeURL("  http://localhost:8080/ ")
+	if err != nil || got != "http://localhost:8080" {
+		t.Errorf("NormalizeURL with spaces = %q, %v, want http://localhost:8080", got, err)
 	}
 }
 

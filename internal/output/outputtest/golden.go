@@ -23,7 +23,7 @@ func Golden(t testing.TB, name string, got []byte) {
 		writeGolden(t, path, got)
 		return
 	}
-	want, err := os.ReadFile(path)
+	want, err := os.ReadFile(filepath.Clean(path))
 	if err != nil {
 		t.Fatalf("reading golden file %s (run with -update to create it): %v", path, err)
 	}

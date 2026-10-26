@@ -48,7 +48,7 @@ func (s *Store) acquire(ctx context.Context, lockPath string) error {
 }
 
 func tryLock(lockPath string) (bool, error) {
-	file, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, fileMode)
+	file, err := os.OpenFile(filepath.Clean(lockPath), os.O_CREATE|os.O_EXCL|os.O_WRONLY, fileMode)
 	if errors.Is(err, fs.ErrExist) {
 		return false, nil
 	}

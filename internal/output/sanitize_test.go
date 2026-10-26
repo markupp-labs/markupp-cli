@@ -9,7 +9,7 @@ func TestSanitizeLine(t *testing.T) {
 		"red \x1b[31mtext\x1b[0m":       "red [31mtext[0m",
 		"bell\x07 cr\r del\x7f":         "bell cr del",
 		"c1 \u009bcsi":                  "c1 csi",
-		"bidi ‮evil⁦x":                  "bidi evilx",
+		"bidi \u202eevil\u2066x":        "bidi evilx",
 		"acentuação e emoji \U0001F600": "acentuação e emoji \U0001F600",
 	}
 	for in, want := range cases {
