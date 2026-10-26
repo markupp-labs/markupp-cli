@@ -16,9 +16,3 @@ func (c *Client) GetHealth(ctx context.Context) (io.ReadCloser, error) {
 func (c *Client) GetAuthenticatedUser(ctx context.Context) (io.ReadCloser, error) {
 	return c.open(ctx, request{method: http.MethodGet, path: endpoint("auth", "me")})
 }
-
-// ListMyTenants reads GET /me/tenants, the tenants of the account with its role in
-// each.
-func (c *Client) ListMyTenants(ctx context.Context) (io.ReadCloser, error) {
-	return c.open(ctx, request{method: http.MethodGet, path: endpoint("me", "tenants")})
-}

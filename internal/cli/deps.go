@@ -42,6 +42,9 @@ type Services struct {
 	Notes     NoteService
 	NoteLinks NoteLinkReader
 	Graph     GraphReader
+	Tenants   TenantAdmin
+	Members   MemberAdmin
+	Invites   InviteInbox
 }
 
 // newServices wires the real client into every port.
@@ -51,6 +54,9 @@ func newServices(api *client.Client) Services {
 		Notes:     api,
 		NoteLinks: api,
 		Graph:     api,
+		Tenants:   api,
+		Members:   api,
+		Invites:   api,
 	}
 }
 

@@ -22,6 +22,9 @@ var commandConstructors = []func(*App) *cobra.Command{
 	newLogoutCmd,
 	newStatusCmd,
 	newConfigCmd,
+	newTenantsCmd,
+	newMembersCmd,
+	newInvitesCmd,
 	newNotesCmd,
 	newGraphCmd,
 }
