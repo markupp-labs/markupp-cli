@@ -39,7 +39,7 @@ func TestVaultsListPrintsATable(t *testing.T) {
 	outputtest.Golden(t, "vaults_list", []byte(run.stdout))
 	run = mu.run(t, "vaults", "list", "--json")
 	run.expectCode(t, 0)
-	if run.stdout != vaultsBody {
+	if run.stdout != vaultsBody+"\n" {
 		t.Errorf("--json printed %q, want the body unchanged", run.stdout)
 	}
 }

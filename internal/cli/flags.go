@@ -68,10 +68,15 @@ type listFlags struct {
 }
 
 func addListFlags(cmd *cobra.Command, f *listFlags) {
+	addNDJSONFlag(cmd, &f.ndjson)
 	flags := cmd.Flags()
-	flags.BoolVar(&f.ndjson, "ndjson", false, "print one JSON object per line, as the results stream in")
 	flags.IntVar(&f.limit, "limit", 0, fmt.Sprintf("results per page (server default %d, values above %d are clamped)", client.DefaultLimit, client.MaxLimit))
 	flags.IntVar(&f.offset, "offset", 0, fmt.Sprintf("results to skip (values above %d are clamped)", client.MaxOffset))
+}
+
+// addNDJSONFlag adds --ndjson alone, for a listing the server does not paginate.
+func addNDJSONFlag(cmd *cobra.Command, ndjson *bool) {
+	cmd.Flags().BoolVar(ndjson, "ndjson", false, "print one JSON object per line, as the results stream in")
 }
 
 // page validates the pagination flags. The server clamps large values itself.
