@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	vaultsBody  = `[{"id":"3b241101-e2bb-4255-8caf-4136c566a962","name":"Work","created_at":"2026-05-01T12:00:00Z"},{"id":"v2","name":"A vault with a name longer than the column","created_at":"2026-05-02T08:30:00.5Z"}]`
-	vaultBody   = `{"id":"3b241101-e2bb-4255-8caf-4136c566a962","name":"Work","created_at":"2026-05-01T12:00:00Z"}`
+	vaultsBody       = `[{"id":"3b241101-e2bb-4255-8caf-4136c566a962","name":"Work","created_at":"2026-05-01T12:00:00Z"},{"id":"v2","name":"A vault with a name longer than the column","created_at":"2026-05-02T08:30:00.5Z"}]`
+	vaultBody        = `{"id":"3b241101-e2bb-4255-8caf-4136c566a962","name":"Work","created_at":"2026-05-01T12:00:00Z"}`
 	vaultMembersBody = `[{"id":"u1","email":"ana@example.com","role":"owner","joined_at":"2026-05-01T12:00:00Z"},{"id":"u2","email":"bo@example.com","role":"viewer","joined_at":"2026-05-03T09:00:00Z"}]`
-	memberBody  = `{"id":"u2","email":"bo@example.com","role":"viewer","joined_at":"2026-05-03T09:00:00Z"}`
+	memberBody       = `{"id":"u2","email":"bo@example.com","role":"viewer","joined_at":"2026-05-03T09:00:00Z"}`
 )
 
 // vaultsMu is a test mu with a server URL and fake vault ports.
