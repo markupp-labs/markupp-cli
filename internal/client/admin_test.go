@@ -28,27 +28,39 @@ func openThenClose(open func() (io.ReadCloser, error)) error {
 	return body.Close()
 }
 
-func adminCalls() []adminCall {
-	ctx := context.Background()
-	return []adminCall{
-		{"ListMyTenants", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.ListMyTenants(ctx) }) }, "GET", "/v1/me/tenants", ""},
-		{"CreateTenant", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.CreateTenant(ctx, "Acme") }) }, "POST", "/v1/tenants", `{"name":"Acme"}`},
-		{"ListMembers", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.ListMembers(ctx) }) }, "GET", "/v1/users", ""},
-		{"ChangeMemberRole", func(c *Client) error { return c.ChangeMemberRole(ctx, "u/1", "admin") }, "PATCH", "/v1/users/u%2F1", `{"role":"admin"}`},
-		{"RemoveMember", func(c *Client) error { return c.RemoveMember(ctx, "u1") }, "DELETE", "/v1/users/u1", ""},
-		{"InviteMember", func(c *Client) error {
-			return openThenClose(func() (io.ReadCloser, error) { return c.InviteMember(ctx, "a@b.c", "viewer") })
-		}, "POST", "/v1/users/invites", `{"email":"a@b.c","role":"viewer"}`},
-		{"ListTenantInvites", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.ListTenantInvites(ctx) }) }, "GET", "/v1/users/invites", ""},
-		{"RevokeInvite", func(c *Client) error { return c.RevokeInvite(ctx, "i1") }, "DELETE", "/v1/users/invites/i1", ""},
-		{"ListMyInvites", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.ListMyInvites(ctx) }) }, "GET", "/v1/me/invites", ""},
-		{"AcceptInvite", func(c *Client) error { return openThenClose(func() (io.ReadCloser, error) { return c.AcceptInvite(ctx, "i1") }) }, "POST", "/v1/me/invites/i1/accept", ""},
-		{"DeclineInvite", func(c *Client) error { return c.DeclineInvite(ctx, "i1") }, "POST", "/v1/me/invites/i1/decline", ""},
-	}
+var adminCtx = context.Background()
+
+// adminCalls is every administration method, with the request it must send.
+var adminCalls = []adminCall{
+	{"ListMyTenants", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.ListMyTenants(adminCtx) })
+	}, "GET", "/v1/me/tenants", ""},
+	{"CreateTenant", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.CreateTenant(adminCtx, "Acme") })
+	}, "POST", "/v1/tenants", `{"name":"Acme"}`},
+	{"ListMembers", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.ListMembers(adminCtx) })
+	}, "GET", "/v1/users", ""},
+	{"ChangeMemberRole", func(c *Client) error { return c.ChangeMemberRole(adminCtx, "u/1", "admin") }, "PATCH", "/v1/users/u%2F1", `{"role":"admin"}`},
+	{"RemoveMember", func(c *Client) error { return c.RemoveMember(adminCtx, "u1") }, "DELETE", "/v1/users/u1", ""},
+	{"InviteMember", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.InviteMember(adminCtx, "a@b.c", "viewer") })
+	}, "POST", "/v1/users/invites", `{"email":"a@b.c","role":"viewer"}`},
+	{"ListTenantInvites", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.ListTenantInvites(adminCtx) })
+	}, "GET", "/v1/users/invites", ""},
+	{"RevokeInvite", func(c *Client) error { return c.RevokeInvite(adminCtx, "i1") }, "DELETE", "/v1/users/invites/i1", ""},
+	{"ListMyInvites", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.ListMyInvites(adminCtx) })
+	}, "GET", "/v1/me/invites", ""},
+	{"AcceptInvite", func(c *Client) error {
+		return openThenClose(func() (io.ReadCloser, error) { return c.AcceptInvite(adminCtx, "i1") })
+	}, "POST", "/v1/me/invites/i1/accept", ""},
+	{"DeclineInvite", func(c *Client) error { return c.DeclineInvite(adminCtx, "i1") }, "POST", "/v1/me/invites/i1/decline", ""},
 }
 
 func TestAdminMethodsSendTheirRoute(t *testing.T) {
-	for _, tc := range adminCalls() {
+	for _, tc := range adminCalls {
 		server := newFakeServer(t, replyJSON(200, `{}`))
 		if err := tc.call(newTestClient(t, server, "t1")); err != nil {
 			t.Errorf("%s: %v", tc.name, err)
