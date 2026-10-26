@@ -11,6 +11,7 @@ Available Commands:
   completion  Generate the autocompletion script for the specified shell
   config      Show and change the configuration
   help        Help about any command
+  notes       List, read, write and search notes
 
 Flags:
       --allow-plain-http   allow http:// outside localhost, sending the token unencrypted
