@@ -1,0 +1,18 @@
+# Installed with `make hooks`. Both hooks are local scripts, so the hook
+# runner downloads nothing.
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  - repo: local
+    hooks:
+      - id: gofmt
+        name: gofmt on the staged Go files
+        entry: bash -c 'unformatted="$(gofmt -l "$@")"; [ -z "$unformatted" ] || { printf "not gofmt formatted:\n%s\n" "$unformatted"; exit 1; }' --
+        language: system
+        types: [go]
+
+      - id: commit-message
+        name: commit message convention
+        entry: scripts/valida-mensagem-de-commit.sh
+        language: script
+        stages: [commit-msg]

@@ -3,7 +3,7 @@ GOLANGCI_LINT ?= $(GO) run github.com/golangci/golangci-lint/v2/cmd/golangci-lin
 BIN ?= bin/mu
 VERSION ?= dev
 
-.PHONY: all test lint fmt vet build cover hooks
+.PHONY: all test lint fmt vet build cover hooks test-scripts
 
 all: fmt vet lint test build
 
@@ -34,3 +34,7 @@ cover:
 # Installs the git hooks declared in .pre-commit-config.yaml
 hooks:
 	pre-commit install --hook-type pre-commit --hook-type commit-msg
+
+# Runs the tests of the shell scripts under scripts/
+test-scripts:
+	./scripts/valida-mensagem-de-commit-test.sh
