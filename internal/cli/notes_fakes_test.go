@@ -14,6 +14,7 @@ type noteCall struct {
 	method string
 	id     string
 	vault  string
+	slug   string
 	text   string
 	page   client.Page
 	create schema.NoteCreateRequest
@@ -52,6 +53,18 @@ func (f *fakeNotes) SearchNotes(_ context.Context, text, vault string, page clie
 	return f.answer(noteCall{method: "search", text: text, vault: vault, page: page})
 }
 
+func (f *fakeNotes) PublicNotes(_ context.Context, slug string, _ client.NoteFilter, page client.Page) (io.ReadCloser, error) {
+	return f.answer(noteCall{method: "public list", slug: slug, page: page})
+}
+
+func (f *fakeNotes) PublicNote(_ context.Context, slug, id string) (io.ReadCloser, error) {
+	return f.answer(noteCall{method: "public get", slug: slug, id: id})
+}
+
+func (f *fakeNotes) PublicSearch(_ context.Context, slug, text string, page client.Page) (io.ReadCloser, error) {
+	return f.answer(noteCall{method: "public search", slug: slug, text: text, page: page})
+}
+
 func (f *fakeNotes) CreateNote(_ context.Context, vault string, note schema.NoteCreateRequest) (io.ReadCloser, error) {
 	return f.answer(noteCall{method: "create", vault: vault, create: note})
 }
@@ -65,11 +78,12 @@ func (f *fakeNotes) DeleteNote(_ context.Context, id string) error {
 	return err
 }
 
-// notesMu returns a mu connected to notes, with a server URL configured.
+// notesMu returns a mu connected to notes, with a server URL configured. notes also
+// answers the reads of a public vault.
 func notesMu(notes *fakeNotes) *testMu {
 	mu := newTestMu()
 	mu.env["MARKUPP_URL"] = "https://markupp.example.com"
-	mu.server.services = Services{Notes: notes}
+	mu.server.services = Services{Notes: notes, Public: notes}
 	return mu
 }
 
