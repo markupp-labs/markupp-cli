@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/cobra"
+
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
 )
@@ -74,5 +76,61 @@ func TestVerboseLoggerWritesJSONToStderr(t *testing.T) {
 	newLogger(false, &stderr).Debug("hidden")
 	if stderr.Len() != 0 {
 		t.Errorf("quiet logger wrote %q", stderr.String())
+	}
+}
+
+func parsedCommand(t *testing.T, register func(*cobra.Command), args ...string) *cobra.Command {
+	t.Helper()
+	cmd := &cobra.Command{Use: "x"}
+	register(cmd)
+	if err := cmd.ParseFlags(args); err != nil {
+		t.Fatalf("ParseFlags(%q): %v", args, err)
+	}
+	return cmd
+}
+
+func TestAddListFlagsBindsPaginationAndNDJSON(t *testing.T) {
+	var f listFlags
+	cmd := parsedCommand(t, func(c *cobra.Command) { addListFlags(c, &f) }, "--ndjson", "--limit", "5", "--offset", "7")
+	if f != (listFlags{ndjson: true, limit: 5, offset: 7}) {
+		t.Errorf("flags = %+v", f)
+	}
+	if usage := cmd.Flags().Lookup("limit").Usage; !strings.Contains(usage, "100") {
+		t.Errorf("--limit help %q does not document the cap", usage)
+	}
+}
+
+func TestAddVaultFlagsOffersPublicOnlyWhenAllowed(t *testing.T) {
+	var f vaultFlags
+	parsedCommand(t, func(c *cobra.Command) { addVaultFlags(c, &f, true) }, "--vault", "v1", "--public", "s")
+	if f != (vaultFlags{vault: "v1", public: "s"}) {
+		t.Errorf("flags = %+v", f)
+	}
+	private := &cobra.Command{Use: "x"}
+	addVaultFlags(private, &vaultFlags{}, false)
+	if private.Flags().Lookup("public") != nil {
+		t.Error("--public registered on a command that cannot read public vaults")
+	}
+}
+
+func TestAddYesFlagSaysWhatIsLost(t *testing.T) {
+	var yes bool
+	cmd := parsedCommand(t, func(c *cobra.Command) { addYesFlag(c, &yes, "the note is deleted for good") }, "--yes")
+	if !yes {
+		t.Error("--yes did not set the flag")
+	}
+	if usage := cmd.Flags().Lookup("yes").Usage; !strings.Contains(usage, "deleted for good") {
+		t.Errorf("--yes help %q does not say what is lost", usage)
+	}
+}
+
+func TestExactArgsNamesWhatWasGiven(t *testing.T) {
+	cmd := &cobra.Command{Use: "get"}
+	err := exactArgs("ID")(cmd, []string{"a", "b"})
+	if failure.KindOf(err) != failure.Usage || !strings.Contains(err.Error(), "ID") || !strings.Contains(err.Error(), `"b"`) {
+		t.Errorf("exactArgs error = %v", err)
+	}
+	if err := exactArgs()(cmd, nil); err != nil {
+		t.Errorf("exactArgs() with no args = %v", err)
 	}
 }
