@@ -116,6 +116,6 @@ func (a *App) removeVaultMember(ctx context.Context, id, userID string, yes bool
 	if err := a.execFeature(ctx, featureVaults, remove); err != nil {
 		return err
 	}
-	a.confirmDone(fmt.Sprintf("removed account %q from vault %q", userID, id))
+	a.inform(fmt.Sprintf("removed account %q from vault %q", userID, id))
 	return nil
 }

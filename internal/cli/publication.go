@@ -104,6 +104,6 @@ func (a *App) unpublishVault(ctx context.Context, id string, yes bool) error {
 	if err := a.execFeature(ctx, featurePublication, unpublish); err != nil {
 		return err
 	}
-	a.confirmDone(fmt.Sprintf("unpublished vault %q", id))
+	a.inform(fmt.Sprintf("unpublished vault %q", id))
 	return nil
 }

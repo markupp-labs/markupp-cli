@@ -137,6 +137,6 @@ func (a *App) deleteVault(ctx context.Context, id string, yes bool) error {
 	if err := a.execFeature(ctx, featureVaults, func(svc Services) error { return svc.Vaults.DeleteVault(ctx, id) }); err != nil {
 		return err
 	}
-	a.confirmDone(fmt.Sprintf("deleted vault %q", id))
+	a.inform(fmt.Sprintf("deleted vault %q", id))
 	return nil
 }

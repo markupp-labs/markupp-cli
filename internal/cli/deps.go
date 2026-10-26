@@ -36,10 +36,11 @@ type Services struct {
 // newServices wires the real client into every port.
 func newServices(api *client.Client) Services {
 	return Services{
-		Vaults:       api,
-		VaultMembers: api,
-		Publication:  api,
-		Public:       api,
+		Vaults:        api,
+		VaultMembers:  api,
+		Publication:   api,
+		Public:        api,
+		Notifications: api,
 	}
 }
 

@@ -63,14 +63,15 @@ func (a *App) execFeature(ctx context.Context, feature string, call func(Service
 	return withFeature(feature, call(svc))
 }
 
-// confirmDone tells on stderr what a command without output did.
-func (a *App) confirmDone(message string) {
+// inform writes a message for the person on stderr: what a command without output
+// did, or a summary that is not part of the data.
+func (a *App) inform(message string) {
 	_, _ = fmt.Fprintln(a.deps.Stderr, message)
 }
 
 // record lists the schema types the commands of this file decode for the text output.
 type record interface {
-	schema.Vault | schema.VaultMember | schema.Publication
+	schema.Vault | schema.VaultMember | schema.Publication | schema.NotificationFeed
 }
 
 // decodeRecord decodes one server record for the text output.
