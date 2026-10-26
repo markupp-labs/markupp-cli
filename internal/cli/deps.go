@@ -10,6 +10,7 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/config"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
 	"github.com/markupp-labs/markupp-cli/internal/session"
+	"github.com/markupp-labs/markupp-cli/internal/tui"
 )
 
 // Deps is everything mu takes from the process. main fills it; tests fill it with
@@ -32,6 +33,8 @@ type Deps struct {
 	Stdin io.Reader
 	// ReadFile reads a file named by a flag; nil means os.ReadFile.
 	ReadFile func(name string) ([]byte, error)
+	// TUI runs the interactive interface; nil means tui.Run on the terminal.
+	TUI func(ctx context.Context, cfg tui.Config) error
 }
 
 // Services are the ports the commands reach the server through. Each port is a small

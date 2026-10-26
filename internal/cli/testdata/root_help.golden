@@ -20,6 +20,7 @@ Available Commands:
   notifications List the notifications of the account
   status        Show the server, the login and the account; tokens are never shown
   tenants       List and create the tenants of the account
+  tui           Browse and edit notes in an interactive interface
   vaults        Manage vaults, their members and their publication
 
 Flags:
