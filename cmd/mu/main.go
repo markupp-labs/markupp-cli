@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/markupp-labs/markupp-cli/internal/cli"
 	"github.com/markupp-labs/markupp-cli/internal/config"
+	"github.com/markupp-labs/markupp-cli/internal/session"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -22,6 +24,8 @@ func main() {
 		Env:     os.LookupEnv,
 		Store:   config.DefaultStore(os.LookupEnv),
 		Version: version,
+		Clock:   time.Now,
+		OpenURL: session.OpenBrowser,
 	}, os.Args[1:])
 	stop()
 	os.Exit(code)

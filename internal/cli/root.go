@@ -18,6 +18,9 @@ import (
 // commandConstructors builds the top level commands, in the order mu --help lists
 // them. A new top level command registers itself with one line here.
 var commandConstructors = []func(*App) *cobra.Command{
+	newLoginCmd,
+	newLogoutCmd,
+	newStatusCmd,
 	newConfigCmd,
 }
 

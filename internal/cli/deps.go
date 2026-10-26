@@ -9,6 +9,7 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/config"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
+	"github.com/markupp-labs/markupp-cli/internal/session"
 )
 
 // Deps is everything mu takes from the process. main fills it; tests fill it with
@@ -100,8 +101,9 @@ func tokenSource(_ context.Context, conn Connection) (client.TokenSource, error)
 		return client.StaticToken(token), nil
 	}
 	if auth := conn.Settings.Auth; auth != nil && auth.AccessToken != "" {
-		return client.StaticToken(auth.AccessToken), nil
+		oauth := session.NewOAuth(client.NewHTTPClient(nil, conn.Logger), conn.AllowPlainHTTP)
+		return session.NewSource(conn.Store, oauth, server, conn.Clock), nil
 	}
 	return nil, failure.New(failure.Unauthenticated, server, "not logged in").
-		WithHint("run mu login, or set " + config.EnvToken)
+		WithHint("run mu login " + server + ", or set " + config.EnvToken)
 }
