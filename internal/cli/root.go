@@ -19,6 +19,9 @@ import (
 // them. A new top level command registers itself with one line here.
 var commandConstructors = []func(*App) *cobra.Command{
 	newConfigCmd,
+	newTenantsCmd,
+	newMembersCmd,
+	newInvitesCmd,
 }
 
 const rootExample = `  mu config set url https://markupp.example.com
