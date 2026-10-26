@@ -13,6 +13,7 @@ Available Commands:
   help        Help about any command
   login       Log in to a server through the browser
   logout      Revoke the stored login and remove it from the config file
+  notes       List, read, write and search notes
   status      Show the server, the login and the account; tokens are never shown
 
 Flags:

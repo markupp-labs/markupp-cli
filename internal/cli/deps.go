@@ -28,6 +28,10 @@ type Deps struct {
 	Clock func() time.Time
 	// OpenURL opens the login page in a browser, best effort; nil only prints it.
 	OpenURL func(url string) error
+	// Stdin is read only when a command is told to, as with --file -.
+	Stdin io.Reader
+	// ReadFile reads a file named by a flag; nil means os.ReadFile.
+	ReadFile func(name string) ([]byte, error)
 }
 
 // Services are the ports the commands reach the server through. Each port is a small
@@ -35,11 +39,12 @@ type Deps struct {
 // satisfies all of them. To add one: a field here and a line in newServices.
 type Services struct {
 	Account AccountReader
+	Notes   NoteService
 }
 
 // newServices wires the real client into every port.
 func newServices(api *client.Client) Services {
-	return Services{Account: api}
+	return Services{Account: api, Notes: api}
 }
 
 // Target says which server identity a command needs.
