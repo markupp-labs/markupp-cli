@@ -6,6 +6,7 @@ package session
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -39,4 +40,19 @@ type Store interface {
 // NewOAuth returns the OAuth client of mu. httpClient nil means the API transport.
 func NewOAuth(httpClient *http.Client, allowPlainHTTP bool) *oauth.Client {
 	return oauth.New(oauth.Config{ClientID: ClientID, Scope: Scope, AllowPlainHTTP: allowPlainHTTP, HTTP: httpClient})
+}
+
+// withLock runs fn on the settings read while holding the config lock, and releases
+// the lock whatever fn returns.
+func withLock(ctx context.Context, store Store, fn func(*config.Settings) error) (err error) {
+	unlock, err := store.Lock(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, unlock()) }()
+	settings, err := store.Load()
+	if err != nil {
+		return err
+	}
+	return fn(&settings)
 }
