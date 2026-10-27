@@ -60,7 +60,7 @@ func decodeMetadata(target string, resp *http.Response) (Metadata, error) {
 	var meta Metadata
 	err := json.NewDecoder(limitBody(resp)).Decode(&meta)
 	if err != nil || meta.Issuer == "" || meta.TokenEndpoint == "" {
-		return Metadata{}, failure.New(failure.Internal, "GET "+target, "malformed OAuth metadata, "+metadataShape)
+		return Metadata{}, failure.New(failure.Internal, "GET "+target, "malformed OAuth metadata, "+metadataShape).WithCause(err)
 	}
 	return meta, nil
 }
