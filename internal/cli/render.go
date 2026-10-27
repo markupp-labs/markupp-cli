@@ -101,7 +101,7 @@ func readObject(body io.ReadCloser) (json.RawMessage, error) {
 	defer func() { _ = body.Close() }()
 	raw, err := io.ReadAll(body)
 	if err != nil {
-		return nil, failure.Wrap(failure.Unavailable, "reading the server response", err)
+		return nil, failure.WrapRead(failure.Unavailable, "reading the server response", err)
 	}
 	return raw, nil
 }

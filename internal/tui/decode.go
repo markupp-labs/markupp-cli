@@ -33,7 +33,7 @@ func decodeBody[T payload](body io.ReadCloser) (T, error) {
 	raw, err := io.ReadAll(body)
 	if err != nil {
 		var zero T
-		return zero, failure.Wrap(failure.Unavailable, "reading the server response", err)
+		return zero, failure.WrapRead(failure.Unavailable, "reading the server response", err)
 	}
 	return decodeRaw[T](raw)
 }

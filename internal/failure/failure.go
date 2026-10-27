@@ -89,6 +89,17 @@ func Wrap(kind Kind, subject string, err error) *Error {
 	return &Error{Kind: kind, Subject: subject, Err: err}
 }
 
+// WrapRead classifies an error that cut the read of a response body short: a canceled
+// context is an interrupt while reading the server response, anything else is kind
+// about subject. The kind of the wrapper wins in KindOf, so the interrupt has to be
+// told apart here.
+func WrapRead(kind Kind, subject string, err error) *Error {
+	if errors.Is(err, context.Canceled) {
+		return Wrap(Interrupted, "reading the server response", err)
+	}
+	return Wrap(kind, subject, err)
+}
+
 // WithHint returns a copy of e carrying hint, the next step offered to the user.
 func (e *Error) WithHint(hint string) *Error {
 	hinted := *e

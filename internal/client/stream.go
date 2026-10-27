@@ -76,6 +76,8 @@ func openArray(decoder *json.Decoder) error {
 	return malformed(fmt.Errorf("expected a JSON array, got %v", token))
 }
 
+// malformed reports a body that is not the expected JSON, or whose read was
+// interrupted.
 func malformed(err error) error {
-	return failure.Wrap(failure.Internal, "malformed server response", err)
+	return failure.WrapRead(failure.Internal, "malformed server response", err)
 }
