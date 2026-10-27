@@ -102,3 +102,14 @@ func TestWithHintDoesNotMutateTheOriginal(t *testing.T) {
 		t.Errorf("HintOf(plain) = %q, want empty", got)
 	}
 }
+
+func TestWrapReadTurnsACanceledReadIntoAnInterrupt(t *testing.T) {
+	canceled := WrapRead(Unavailable, "reading the server response", fmt.Errorf("read tcp: %w", context.Canceled))
+	if canceled.Kind != Interrupted || !errors.Is(canceled, context.Canceled) {
+		t.Errorf("canceled read = %v (kind %s), want an interrupt keeping the cause", canceled, canceled.Kind)
+	}
+	broken := WrapRead(Unavailable, "reading the server response", errors.New("connection reset"))
+	if broken.Kind != Unavailable || broken.Subject != "reading the server response" {
+		t.Errorf("broken read = %v (kind %s), want unavailable", broken, broken.Kind)
+	}
+}

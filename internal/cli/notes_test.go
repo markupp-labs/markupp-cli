@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"io"
 	"strings"
 	"testing"
 
@@ -130,4 +131,32 @@ func TestNotesGetNotFoundExitsFive(t *testing.T) {
 func TestNotesGetNeedsAnID(t *testing.T) {
 	run := notesMu(newFakeNotes(nil)).run(t, "notes", "get")
 	run.expectCode(t, 2)
+}
+
+func TestNotesListInterruptedMidStreamExits130(t *testing.T) {
+	for _, mode := range [][]string{{}, {"--ndjson"}} {
+		notes := newFakeNotes(nil)
+		notes.streams = map[string]io.ReadCloser{"list": &interruptedBody{prefix: strings.NewReader(noteListBody[:40])}}
+		run := notesMu(notes).run(t, append([]string{"notes", "list", "--vault", "v1"}, mode...)...)
+		run.expectCode(t, 130)
+		if strings.Contains(run.stderr, "malformed") {
+			t.Errorf("%v: stderr %q calls an interrupt a malformed response", mode, run.stderr)
+		}
+	}
+}
+
+func TestNotesGetInterruptedWhileReadingExits130(t *testing.T) {
+	notes := newFakeNotes(nil)
+	notes.streams = map[string]io.ReadCloser{"get": &interruptedBody{prefix: strings.NewReader(`{"id":`)}}
+	notesMu(notes).run(t, "notes", "get", "n1").expectCode(t, 130)
+}
+
+func TestNotesListRateLimitedExits7WithTheHint(t *testing.T) {
+	notes := newFakeNotes(nil)
+	notes.errs["list"] = failure.New(failure.RateLimited, "GET /v1/notes", "too many requests").WithHint("retry after 30 seconds")
+	run := notesMu(notes).run(t, "notes", "list", "--vault", "v1")
+	run.expectCode(t, 7)
+	if run.stdout != "" || !strings.Contains(run.stderr, "Hint: retry after 30 seconds") {
+		t.Errorf("stdout %q stderr %q, want nothing on stdout and the Retry-After hint on stderr", run.stdout, run.stderr)
+	}
 }

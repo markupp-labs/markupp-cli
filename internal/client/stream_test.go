@@ -1,6 +1,8 @@
 package client
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"net/url"
 	"strings"
@@ -101,5 +103,31 @@ func TestSetNonEmptySkipsBlankValues(t *testing.T) {
 	setNonEmpty(query, "q", "kubernetes")
 	if got := query.Encode(); got != "q=kubernetes" {
 		t.Errorf("query = %q, want q=kubernetes", got)
+	}
+}
+
+// interruptedBody serves prefix, then fails as a body read does after its context
+// was canceled.
+type interruptedBody struct {
+	prefix *strings.Reader
+}
+
+func (b *interruptedBody) Read(p []byte) (int, error) {
+	if b.prefix.Len() > 0 {
+		return b.prefix.Read(p)
+	}
+	return 0, fmt.Errorf("read tcp 127.0.0.1:80: %w", context.Canceled)
+}
+
+func (b *interruptedBody) Close() error { return nil }
+
+func TestElementsInterruptedMidStreamIsAnInterrupt(t *testing.T) {
+	body := &interruptedBody{prefix: strings.NewReader(`[{"id":"n1"},{"id":`)}
+	var last error
+	for _, err := range Elements(body) {
+		last = err
+	}
+	if got := failure.KindOf(last); got != failure.Interrupted {
+		t.Errorf("interrupted stream error = %v (kind %s), want interrupted", last, got)
 	}
 }

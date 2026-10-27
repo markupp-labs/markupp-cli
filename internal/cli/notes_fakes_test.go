@@ -28,6 +28,7 @@ type noteCall struct {
 // body or the error set for the method.
 type fakeNotes struct {
 	replies map[string]string
+	streams map[string]io.ReadCloser
 	errs    map[string]error
 	calls   []noteCall
 }
@@ -40,6 +41,9 @@ func (f *fakeNotes) answer(call noteCall) (io.ReadCloser, error) {
 	f.calls = append(f.calls, call)
 	if err := f.errs[call.method]; err != nil {
 		return nil, err
+	}
+	if stream, ok := f.streams[call.method]; ok {
+		return stream, nil
 	}
 	return io.NopCloser(strings.NewReader(f.replies[call.method])), nil
 }

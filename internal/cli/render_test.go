@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -93,5 +94,29 @@ func TestRendererRefusesJSONWithNDJSON(t *testing.T) {
 	app.global.json = true
 	if _, err := app.renderer(true); failure.KindOf(err) != failure.Usage {
 		t.Errorf("--json with --ndjson error = %v, want usage", err)
+	}
+}
+
+// interruptedBody serves prefix, then fails as a body read does after its context
+// was canceled.
+type interruptedBody struct {
+	prefix *strings.Reader
+}
+
+func (b *interruptedBody) Read(p []byte) (int, error) {
+	if b.prefix.Len() > 0 {
+		return b.prefix.Read(p)
+	}
+	return 0, fmt.Errorf("read tcp 127.0.0.1:80: %w", context.Canceled)
+}
+
+func (b *interruptedBody) Close() error { return nil }
+
+func TestObjectInterruptedWhileReadingIsAnInterrupt(t *testing.T) {
+	var out bytes.Buffer
+	r := renderer{mode: output.Text, printer: output.NewPrinter(&out)}
+	err := r.object(&interruptedBody{prefix: strings.NewReader(`{"id":`)}, renderNamed)
+	if got := failure.KindOf(err); got != failure.Interrupted {
+		t.Errorf("interrupted read error = %v (kind %s), want interrupted", err, got)
 	}
 }
