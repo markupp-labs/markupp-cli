@@ -37,6 +37,7 @@ func TestRequireYes(t *testing.T) {
 
 func TestResolveVaultPrecedence(t *testing.T) {
 	mu := newTestMu()
+	mu.store.settings.URL = "https://markupp.example.com"
 	mu.store.settings.Vault = "v-file"
 	app := newApp(mu.deps(nil, nil))
 	if got, _ := app.resolveVault(vaultFlags{}); got.ID != "v-file" {
@@ -55,7 +56,9 @@ func TestResolveVaultPrecedence(t *testing.T) {
 }
 
 func TestResolveVaultErrors(t *testing.T) {
-	app := newApp(newTestMu().deps(nil, nil))
+	mu := newTestMu()
+	mu.store.settings.URL = "https://markupp.example.com"
+	app := newApp(mu.deps(nil, nil))
 	_, err := app.resolveVault(vaultFlags{})
 	if failure.KindOf(err) != failure.Usage || !strings.Contains(failure.HintOf(err), "--vault") {
 		t.Errorf("no vault error = %v hint %q, want usage hinting --vault", err, failure.HintOf(err))

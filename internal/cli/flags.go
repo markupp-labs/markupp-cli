@@ -137,6 +137,9 @@ func (a *App) resolveVault(f vaultFlags) (vaultTarget, error) {
 	if err != nil {
 		return vaultTarget{}, err
 	}
+	if resolved.URL.Value == "" {
+		return vaultTarget{}, errNoServer()
+	}
 	if resolved.Vault.Value == "" {
 		return vaultTarget{}, errNoVault()
 	}
