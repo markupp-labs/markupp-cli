@@ -11,9 +11,14 @@ import (
 	"time"
 )
 
-// StaleAfter is the age from which a lock file is taken as left behind by a dead
-// process. The critical sections of mu make at most a couple of short requests.
-const StaleAfter = 30 * time.Second
+// MaxHold is the longest a holder keeps the lock: the session bounds its critical
+// section (a discovery and a grant or a revocation) with it. StaleAfter is the age
+// from which a lock file is taken as left behind by a dead process; it stays well
+// above MaxHold, so a live holder never loses the lock to a waiter.
+const (
+	MaxHold    = 60 * time.Second
+	StaleAfter = 2 * time.Minute
+)
 
 const lockRetry = 25 * time.Millisecond
 

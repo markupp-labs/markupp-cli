@@ -43,16 +43,19 @@ func NewOAuth(httpClient *http.Client, allowPlainHTTP bool) *oauth.Client {
 }
 
 // withLock runs fn on the settings read while holding the config lock, and releases
-// the lock whatever fn returns.
-func withLock(ctx context.Context, store Store, fn func(*config.Settings) error) (err error) {
+// the lock whatever fn returns. fn gets a context that ends after config.MaxHold, so
+// the lock is released before a waiting process could take it as stale.
+func withLock(ctx context.Context, store Store, fn func(context.Context, *config.Settings) error) (err error) {
 	unlock, err := store.Lock(ctx)
 	if err != nil {
 		return err
 	}
 	defer func() { err = errors.Join(err, unlock()) }()
+	held, cancel := context.WithTimeout(ctx, config.MaxHold)
+	defer cancel()
 	settings, err := store.Load()
 	if err != nil {
 		return err
 	}
-	return fn(&settings)
+	return fn(held, &settings)
 }

@@ -26,12 +26,12 @@ func (a Authenticator) Logout(ctx context.Context) (removed bool, err error) {
 // removeLogin revokes and removes the credential under the lock. issuer is empty when
 // another process removed it first.
 func (a Authenticator) removeLogin(ctx context.Context) (issuer string, revokeErr, err error) {
-	err = withLock(ctx, a.Store, func(settings *config.Settings) error {
+	err = withLock(ctx, a.Store, func(held context.Context, settings *config.Settings) error {
 		if settings.Auth == nil {
 			return nil
 		}
 		issuer = settings.Auth.Issuer
-		revokeErr = a.revoke(ctx, *settings.Auth)
+		revokeErr = a.revoke(held, *settings.Auth)
 		settings.Auth = nil
 		return a.Store.Save(*settings)
 	})

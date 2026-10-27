@@ -54,12 +54,12 @@ func (s *Source) Token(ctx context.Context) (string, error) {
 // refresh, so there is no retry.
 func (s *Source) Rejected(ctx context.Context, token string) (string, bool, error) {
 	var fresh string
-	err := s.locked(ctx, func(settings *config.Settings) error {
+	err := s.locked(ctx, func(held context.Context, settings *config.Settings) error {
 		cred, err := s.credential(*settings)
 		if err != nil || cred.AccessToken != token {
 			return err
 		}
-		fresh, err = s.rotate(ctx, settings, cred)
+		fresh, err = s.rotate(held, settings, cred)
 		return err
 	})
 	return fresh, fresh != "", err
@@ -68,7 +68,7 @@ func (s *Source) Rejected(ctx context.Context, token string) (string, bool, erro
 // renew refreshes under the lock, unless another process did while this one waited.
 func (s *Source) renew(ctx context.Context) (string, error) {
 	var token string
-	err := s.locked(ctx, func(settings *config.Settings) error {
+	err := s.locked(ctx, func(held context.Context, settings *config.Settings) error {
 		cred, err := s.credential(*settings)
 		if err != nil {
 			return err
@@ -77,14 +77,14 @@ func (s *Source) renew(ctx context.Context) (string, error) {
 			token = cred.AccessToken
 			return nil
 		}
-		token, err = s.rotate(ctx, settings, cred)
+		token, err = s.rotate(held, settings, cred)
 		return err
 	})
 	return token, err
 }
 
 // locked runs fn on the settings read while holding the config lock.
-func (s *Source) locked(ctx context.Context, fn func(*config.Settings) error) error {
+func (s *Source) locked(ctx context.Context, fn func(context.Context, *config.Settings) error) error {
 	return withLock(ctx, s.store, fn)
 }
 

@@ -93,7 +93,7 @@ func (a Authenticator) awaitBrowser(ctx context.Context, meta oauth.Metadata, ca
 }
 
 func (a Authenticator) save(ctx context.Context, server string, cred config.Credential) error {
-	return withLock(ctx, a.Store, func(settings *config.Settings) error {
+	return withLock(ctx, a.Store, func(_ context.Context, settings *config.Settings) error {
 		settings.URL = server
 		settings.Auth = &cred
 		return a.Store.Save(*settings)
