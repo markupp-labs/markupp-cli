@@ -9,6 +9,7 @@ import (
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/output"
+	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
 const graphLinksLong = `List the links of every note of a vault, one per line, by the path of the
@@ -84,7 +85,7 @@ func (a *App) fetchVaultLinks(ctx context.Context, flags graphLinksFlags, page c
 }
 
 func vaultLinkRow(raw json.RawMessage) ([]string, error) {
-	link, err := decodeLink(raw)
+	link, err := decodeRecord[schema.Link](raw)
 	if err != nil {
 		return nil, err
 	}

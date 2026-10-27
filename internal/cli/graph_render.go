@@ -10,9 +10,9 @@ import (
 
 // renderGraph prints the nodes of a graph, a blank line, then its links by node label.
 func renderGraph(p *output.Printer, raw json.RawMessage) error {
-	var graph schema.Graph
-	if err := json.Unmarshal(raw, &graph); err != nil {
-		return malformedRecord(raw, err)
+	graph, err := decodeRecord[schema.Graph](raw)
+	if err != nil {
+		return err
 	}
 	if err := printGraphNodes(p, graph.Nodes); err != nil {
 		return err

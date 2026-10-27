@@ -118,16 +118,8 @@ func (a *App) vaultGraphReader(ctx context.Context, flags vaultFlags) (string, G
 	return target.ID, graph, err
 }
 
-func decodeCommunity(raw json.RawMessage) (schema.Community, error) {
-	var community schema.Community
-	if err := json.Unmarshal(raw, &community); err != nil {
-		return schema.Community{}, malformedRecord(raw, err)
-	}
-	return community, nil
-}
-
 func communityRow(raw json.RawMessage) ([]string, error) {
-	community, err := decodeCommunity(raw)
+	community, err := decodeRecord[schema.Community](raw)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +128,7 @@ func communityRow(raw json.RawMessage) ([]string, error) {
 }
 
 func renderCommunity(p *output.Printer, raw json.RawMessage) error {
-	community, err := decodeCommunity(raw)
+	community, err := decodeRecord[schema.Community](raw)
 	if err != nil {
 		return err
 	}

@@ -79,9 +79,9 @@ func (a *App) listNoteMentions(ctx context.Context, id string, flags noteMention
 }
 
 func mentionRow(raw json.RawMessage) ([]string, error) {
-	var mention schema.Mention
-	if err := json.Unmarshal(raw, &mention); err != nil {
-		return nil, malformedRecord(raw, err)
+	mention, err := decodeRecord[schema.Mention](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{mention.Note.ID, decimal(mention.Prior, 2), mention.Note.Path, mention.CitedTitle}, nil
 }
@@ -120,9 +120,9 @@ func (a *App) listNoteSuggestions(ctx context.Context, id string, flags listFlag
 }
 
 func suggestionRow(raw json.RawMessage) ([]string, error) {
-	var suggestion schema.LinkSuggestion
-	if err := json.Unmarshal(raw, &suggestion); err != nil {
-		return nil, malformedRecord(raw, err)
+	suggestion, err := decodeRecord[schema.LinkSuggestion](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{
 		suggestion.Note.ID, decimal(suggestion.Score, 4), decimal(suggestion.ResourceAllocation, 2),

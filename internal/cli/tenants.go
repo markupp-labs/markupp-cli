@@ -81,9 +81,9 @@ func createTenant(name string) bodyFetch {
 }
 
 func myTenantRow(raw json.RawMessage) ([]string, error) {
-	var tenant schema.MyTenant
-	if err := json.Unmarshal(raw, &tenant); err != nil {
-		return nil, malformedRecord(raw, err)
+	tenant, err := decodeRecord[schema.MyTenant](raw)
+	if err != nil {
+		return nil, err
 	}
 	lastNote := ""
 	if tenant.LastNoteAt != nil {
@@ -94,9 +94,9 @@ func myTenantRow(raw json.RawMessage) ([]string, error) {
 
 // printTenantID prints the id of a TenantResponse, for the caller to pipe.
 func printTenantID(p *output.Printer, raw json.RawMessage) error {
-	var tenant schema.Tenant
-	if err := json.Unmarshal(raw, &tenant); err != nil {
-		return malformedRecord(raw, err)
+	tenant, err := decodeRecord[schema.Tenant](raw)
+	if err != nil {
+		return err
 	}
 	return p.Line(tenant.ID)
 }

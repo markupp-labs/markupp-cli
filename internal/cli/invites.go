@@ -88,18 +88,18 @@ func acceptInvite(id string) bodyFetch {
 }
 
 func pendingInviteRow(raw json.RawMessage) ([]string, error) {
-	var invite schema.PendingInvite
-	if err := json.Unmarshal(raw, &invite); err != nil {
-		return nil, malformedRecord(raw, err)
+	invite, err := decodeRecord[schema.PendingInvite](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{invite.ID, invite.Role, shortTime(invite.ExpiresAt), invite.TenantID, invite.TenantName}, nil
 }
 
 // printJoinedTenant prints the id of the joined tenant and confirms on stderr.
 func (a *App) printJoinedTenant(p *output.Printer, raw json.RawMessage) error {
-	var tenant schema.Tenant
-	if err := json.Unmarshal(raw, &tenant); err != nil {
-		return malformedRecord(raw, err)
+	tenant, err := decodeRecord[schema.Tenant](raw)
+	if err != nil {
+		return err
 	}
 	a.confirm("joined tenant " + tenant.Name + " as " + tenant.Role)
 	return p.Line(tenant.ID)

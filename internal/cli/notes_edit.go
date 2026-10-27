@@ -140,9 +140,9 @@ func printEdited(p *output.Printer, note schema.Note) error {
 
 // decodeNotePath returns the path of a note body.
 func decodeNotePath(raw json.RawMessage) (string, error) {
-	var note schema.Note
-	if err := json.Unmarshal(raw, &note); err != nil {
-		return "", malformedRecord(raw, err)
+	note, err := decodeRecord[schema.Note](raw)
+	if err != nil {
+		return "", err
 	}
 	return note.Path, nil
 }

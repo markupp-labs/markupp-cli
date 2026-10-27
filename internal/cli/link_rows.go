@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -43,15 +42,6 @@ func (a *App) startListing(f listFlags) (client.Page, renderer, error) {
 	}
 	r, err := a.renderer(f.ndjson)
 	return page, r, err
-}
-
-// decodeLink decodes one element of a link listing.
-func decodeLink(raw json.RawMessage) (schema.Link, error) {
-	var link schema.Link
-	if err := json.Unmarshal(raw, &link); err != nil {
-		return schema.Link{}, malformedRecord(raw, err)
-	}
-	return link, nil
 }
 
 // linkTypeLabel is the type of a link, with the predicate of a typed link after a colon.

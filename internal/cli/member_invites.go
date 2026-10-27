@@ -55,9 +55,9 @@ func (a *App) inviteMember(cmd *cobra.Command, email, role string) error {
 // printIssuedInvite prints the invite and, when the token came back, warns on stderr
 // that it is shown only once.
 func (a *App) printIssuedInvite(p *output.Printer, raw json.RawMessage) error {
-	var invite schema.IssuedInvite
-	if err := json.Unmarshal(raw, &invite); err != nil {
-		return malformedRecord(raw, err)
+	invite, err := decodeRecord[schema.IssuedInvite](raw)
+	if err != nil {
+		return err
 	}
 	fields := []output.Field{
 		{Key: "id", Value: invite.ID}, {Key: "email", Value: invite.Email},
@@ -91,9 +91,9 @@ func fetchTenantInvites(ctx context.Context, svc Services) (io.ReadCloser, error
 }
 
 func tenantInviteRow(raw json.RawMessage) ([]string, error) {
-	var invite schema.Invite
-	if err := json.Unmarshal(raw, &invite); err != nil {
-		return nil, malformedRecord(raw, err)
+	invite, err := decodeRecord[schema.Invite](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{invite.ID, invite.Role, shortTime(invite.ExpiresAt), shortTime(invite.AcceptedAt), invite.Email}, nil
 }

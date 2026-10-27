@@ -102,9 +102,9 @@ func (c *notesSearchCmd) fetch(ctx context.Context, text string, page client.Pag
 }
 
 func searchRow(raw json.RawMessage) ([]string, error) {
-	var hit schema.SearchHit
-	if err := json.Unmarshal(raw, &hit); err != nil {
-		return nil, malformedRecord(raw, err)
+	hit, err := decodeRecord[schema.SearchHit](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{hit.Note.ID, hit.Note.Path, output.Snippet(hit.Snippet)}, nil
 }

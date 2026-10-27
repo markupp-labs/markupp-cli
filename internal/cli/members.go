@@ -113,9 +113,9 @@ var memberColumns = []output.Column{
 }
 
 func memberRow(raw json.RawMessage) ([]string, error) {
-	var member schema.Member
-	if err := json.Unmarshal(raw, &member); err != nil {
-		return nil, malformedRecord(raw, err)
+	member, err := decodeRecord[schema.Member](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{member.ID, member.Role, shortTime(member.JoinedAt), member.Email}, nil
 }

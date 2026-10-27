@@ -9,6 +9,7 @@ import (
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/output"
+	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
 // NoteLinkReader reads what connects one note to the others: its links, its unlinked
@@ -90,7 +91,7 @@ func fetchNoteLinks(ctx context.Context, links NoteLinkReader, id string, flags 
 // source for backlinks.
 func noteLinkRow(back bool) rowFunc {
 	return func(raw json.RawMessage) ([]string, error) {
-		link, err := decodeLink(raw)
+		link, err := decodeRecord[schema.Link](raw)
 		if err != nil {
 			return nil, err
 		}

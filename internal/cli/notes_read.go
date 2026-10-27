@@ -99,9 +99,9 @@ func (c *notesListCmd) fetch(ctx context.Context, filter client.NoteFilter, page
 }
 
 func noteListRow(raw json.RawMessage) ([]string, error) {
-	var note schema.NoteListItem
-	if err := json.Unmarshal(raw, &note); err != nil {
-		return nil, malformedRecord(raw, err)
+	note, err := decodeRecord[schema.NoteListItem](raw)
+	if err != nil {
+		return nil, err
 	}
 	return []string{note.ID, note.UpdatedAt, note.Path}, nil
 }
@@ -182,9 +182,9 @@ func (a *App) renderNote(body io.ReadCloser, print func(*output.Printer, schema.
 		return err
 	}
 	return r.object(body, func(p *output.Printer, raw json.RawMessage) error {
-		var note schema.Note
-		if err := json.Unmarshal(raw, &note); err != nil {
-			return malformedRecord(raw, err)
+		note, err := decodeRecord[schema.Note](raw)
+		if err != nil {
+			return err
 		}
 		return print(p, note)
 	})

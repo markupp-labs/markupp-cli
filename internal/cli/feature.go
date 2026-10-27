@@ -2,14 +2,12 @@ package cli
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
-	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
 // The server features that some commands need beyond the published contract. The
@@ -76,20 +74,6 @@ func (a *App) execFeature(ctx context.Context, feature string, call func(Service
 // did, or a summary that is not part of the data.
 func (a *App) inform(message string) {
 	_, _ = fmt.Fprintln(a.deps.Stderr, message)
-}
-
-// record lists the schema types the commands of this file decode for the text output.
-type record interface {
-	schema.Vault | schema.Member | schema.Publication | schema.NotificationFeed
-}
-
-// decodeRecord decodes one server record for the text output.
-func decodeRecord[T record](raw json.RawMessage) (T, error) {
-	var decoded T
-	if err := json.Unmarshal(raw, &decoded); err != nil {
-		return decoded, malformedRecord(raw, err)
-	}
-	return decoded, nil
 }
 
 // showFeature runs call through openFeature and prints the object it answers.

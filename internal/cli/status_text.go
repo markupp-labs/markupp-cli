@@ -58,9 +58,9 @@ func describeCredential(cred credentialView) string {
 }
 
 func printTenants(p *output.Printer, raw json.RawMessage) error {
-	var tenants []schema.MyTenant
-	if err := json.Unmarshal(raw, &tenants); err != nil {
-		return malformedRecord(raw, err)
+	tenants, err := decodeRecord[[]schema.MyTenant](raw)
+	if err != nil {
+		return err
 	}
 	table := p.Table(output.Column{Name: "TENANT", Width: 36}, output.Column{Name: "NAME", Width: 24},
 		output.Column{Name: "ROLE", Width: 6}, output.Column{Name: "NOTES"})

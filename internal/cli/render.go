@@ -9,6 +9,7 @@ import (
 	"github.com/markupp-labs/markupp-cli/internal/client"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
 	"github.com/markupp-labs/markupp-cli/internal/output"
+	"github.com/markupp-labs/markupp-cli/internal/schema"
 )
 
 // renderer prints an API body in the mode the flags asked for.
@@ -112,4 +113,24 @@ func single(raw json.RawMessage) iter.Seq2[json.RawMessage, error] {
 // malformedRecord reports a record that does not decode into its schema type.
 func malformedRecord(raw json.RawMessage, err error) error {
 	return failure.Wrap(failure.Internal, fmt.Sprintf("malformed server record %.200s", raw), err)
+}
+
+// decodable lists the schema types the commands decode for the text output, a type
+// set instead of any.
+type decodable interface {
+	schema.Note | schema.NoteListItem | schema.SearchHit | schema.Link | schema.Mention |
+		schema.LinkSuggestion | schema.Graph | schema.Community | schema.Tenant |
+		schema.MyTenant | []schema.MyTenant | schema.Member | schema.Invite |
+		schema.IssuedInvite | schema.PendingInvite | schema.Vault | schema.Publication |
+		schema.NotificationFeed
+}
+
+// decodeRecord decodes one server record for the text output, naming the record
+// when it does not have the expected shape.
+func decodeRecord[T decodable](raw json.RawMessage) (T, error) {
+	var decoded T
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		return decoded, malformedRecord(raw, err)
+	}
+	return decoded, nil
 }
