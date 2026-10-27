@@ -70,7 +70,8 @@ func isLoopback(host string) bool {
 
 // NewHTTPClient returns the http.Client every request of mu goes through: bounded
 // redirects that drop the credentials when they leave the host or downgrade to http,
-// and the optional request log. The oauth package uses it too.
+// and refuse to resend a request body there (307 and 308 replay it, and the body of an
+// OAuth grant or a note is as secret as the token), and the optional request log. The oauth package uses it too.
 func NewHTTPClient(transport http.RoundTripper, logger *slog.Logger) *http.Client {
 	if transport == nil {
 		transport = defaultTransport()
@@ -92,10 +93,15 @@ func checkRedirect(next *http.Request, via []*http.Request) error {
 	if len(via) >= maxRedirects {
 		return fmt.Errorf("stopped after %d redirects at %s", maxRedirects, next.URL.Redacted())
 	}
-	if crossesTrust(via[0].URL, next.URL) {
-		next.Header.Del("Authorization")
-		next.Header.Del(tenantHeader)
+	if !crossesTrust(via[0].URL, next.URL) {
+		return nil
 	}
+	if next.GetBody != nil {
+		return fmt.Errorf("refusing to resend the body of %s %s to %s: the redirect leaves the host or drops https",
+			via[0].Method, via[0].URL.Redacted(), next.URL.Redacted())
+	}
+	next.Header.Del("Authorization")
+	next.Header.Del(tenantHeader)
 	return nil
 }
 
