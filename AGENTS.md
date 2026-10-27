@@ -201,8 +201,7 @@ adopts the same hook when it lands here.
 `feature/` or `refactor/`). Feature work targets `dev` (`--base dev`); only release or milestone
 consolidation targets `main`. Promote `dev` to `main` with a merge commit, never squash, then
 back-merge `main` into `dev`. Release tags follow semantic versioning with a `v` prefix
-(`v1.0.0`, `v1.0.0-rc.1`). This repo currently has only `main`, so the `dev` branch has to be
-created before the first feature PR.
+(`v1.0.0`, `v1.0.0-rc.1`).
 
 **Templates.** Every issue and pull request must follow the templates in `.github`, mirroring
 `markupp-labs/markupp`. They are not in this repo yet.
@@ -253,14 +252,18 @@ Already decided:
 
 - Binary name `mu`.
 - Human readable text by default, `--json` for structured output.
-- The interactive interface is `mu tui`; a bare `mu` prints help.
-
-Still open, do not settle these on your own:
-
-- Go module path and whether the module lives at the repo root or in a subdirectory, as the
-  server does.
-- The exact exit code table.
-- Config file format, path, and the name of the environment variables for server URL and token.
-- Whether the API client is hand written or generated from `openapi.yaml`.
-- Release tooling and which platforms ship binaries.
-- Whether a streaming format (NDJSON) joins `--json` for large result sets.
+- The interactive interface is `mu tui`; a bare `mu` prints help. It follows the interaction
+  model of K9s (`:` command prompt, `/` filter, resource tables, crumbs, hotkeys).
+- Module `github.com/markupp-labs/markupp-cli` at the repo root.
+- Exit codes: 0 ok, 1 internal, 2 usage, 3 not authenticated, 4 forbidden, 5 not found,
+  6 conflict, 7 rate limited, 8 unavailable, 130 interrupted.
+- Config in `$XDG_CONFIG_HOME/markupp/cli.json` (`0600`). Environment variables `MARKUPP_URL`,
+  `MARKUPP_TOKEN`, `MARKUPP_TENANT`, `MARKUPP_VAULT`; precedence flag, env, file.
+- Login through OAuth 2.1 with PKCE and a loopback redirect, as the built-in client
+  `markupp-cli` of the server.
+- The API client is hand written, not generated.
+- goreleaser ships linux, darwin and windows on amd64 and arm64 for every `v*` tag.
+- `--ndjson` joins `--json` on listings.
+- Help and messages in English. Public vaults are read with `--public SLUG`.
+- No `--all` paging, and no commands for routes an OAuth token cannot reach
+  (`first_party_only`).

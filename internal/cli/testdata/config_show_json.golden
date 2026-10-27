@@ -1,0 +1,1 @@
+{"path":"/home/u/.config/markupp/cli.json","url":{"value":"http://localhost:8080","source":"file"},"tenant":{"value":"t-env","source":"env"},"vault":{"value":"v-file","source":"file"},"token":{"set":true,"source":"env"},"login":{"issuer":"http://localhost:8080","expires_at":"2026-11-01T12:00:00Z"}}
