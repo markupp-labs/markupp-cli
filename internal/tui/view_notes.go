@@ -94,18 +94,21 @@ func (s *shell) onSelectedNote(selected func() (record, bool), run func(r record
 	}
 }
 
-// noteActions are the actions on a note, bound by on to how the note is chosen.
+// noteActions are the actions on a note, bound by on to how the note is chosen. A
+// public vault is read only, so it gets no edit or delete.
 func (s *shell) noteActions(on func(run func(r record)) func()) []Hotkey {
-	return []Hotkey{
-		runeKey('v', "view", on(func(r record) { s.viewNote(r.note) })),
-		runeKey('e', "edit", on(func(r record) { s.editNote(r.note) })),
-		ctrlKey(ctrlDelete, "delete", on(func(r record) { s.deleteNote(r.note, r.label) })),
+	keys := []Hotkey{runeKey('v', "view", on(func(r record) { s.viewNote(r.note) }))}
+	if s.scope.PublicSlug == "" {
+		keys = append(keys,
+			runeKey('e', "edit", on(func(r record) { s.editNote(r.note) })),
+			ctrlKey(ctrlDelete, "delete", on(func(r record) { s.deleteNote(r.note, r.label) })))
+	}
+	return append(keys,
 		runeKey('l', "links", on(func(r record) { s.pushRelation(r, newLinksView) })),
 		runeKey('b', "backlinks", on(func(r record) { s.pushRelation(r, newBacklinksView) })),
 		runeKey('m', "mentions", on(func(r record) { s.pushRelation(r, newMentionsView) })),
 		runeKey('s', "suggestions", on(func(r record) { s.pushRelation(r, newSuggestionsView) })),
-		runeKey('g', "graph", on(func(r record) { s.pushGraph(r.note, r.label) })),
-	}
+		runeKey('g', "graph", on(func(r record) { s.pushGraph(r.note, r.label) })))
 }
 
 func (s *shell) copySelected(selected func() (record, bool)) {
