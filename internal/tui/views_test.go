@@ -161,6 +161,20 @@ func TestConflictDialogCancelsByDefault(t *testing.T) {
 	}
 }
 
+func TestConflictCancelKeepsTheEditedText(t *testing.T) {
+	api := conflictAPI()
+	h := startOnNotes(t, api, editorShell(&fakeEditor{edited: "my unsaved words"}, t.TempDir()))
+	h.typeText("e")
+	h.waitFor("Overwrite", "Cancel keeps your version")
+	h.press(tcell.KeyEnter)
+	h.waitFor("edit(work/meeting.md)", "my unsaved words")
+	h.press(tcell.KeyCtrlS)
+	h.waitFor("saved work/meeting.md")
+	if got := api.sentUpdates(); len(got) != 2 || got[1].Content != "my unsaved words" || got[1].Force {
+		t.Errorf("updates = %+v, want the kept text sent again without force", got)
+	}
+}
+
 func TestConflictOverwriteForcesTheWrite(t *testing.T) {
 	api := conflictAPI()
 	h := startOnNotes(t, api, editorShell(&fakeEditor{edited: "mine"}, t.TempDir()))
