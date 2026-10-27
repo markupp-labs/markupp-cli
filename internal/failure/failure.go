@@ -89,6 +89,15 @@ func Wrap(kind Kind, subject string, err error) *Error {
 	return &Error{Kind: kind, Subject: subject, Err: err}
 }
 
+// WithCause returns a copy of e that wraps cause. The message stays the one of e, so
+// a cause that could quote a secret is kept for errors.Is and errors.As but never
+// printed.
+func (e *Error) WithCause(cause error) *Error {
+	caused := *e
+	caused.Err = cause
+	return &caused
+}
+
 // WrapRead classifies an error that cut the read of a response body short: a canceled
 // context is an interrupt while reading the server response, anything else is kind
 // about subject. The kind of the wrapper wins in KindOf, so the interrupt has to be

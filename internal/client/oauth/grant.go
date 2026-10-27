@@ -108,7 +108,7 @@ func grantError(subject string, resp *http.Response) error {
 func decodeTokens(subject string, resp *http.Response) (Tokens, error) {
 	var body tokenResponse
 	if err := json.NewDecoder(limitBody(resp)).Decode(&body); err != nil {
-		return Tokens{}, failure.New(failure.Internal, subject, "token response is not a JSON object, "+tokensShape)
+		return Tokens{}, failure.New(failure.Internal, subject, "token response is not a JSON object, "+tokensShape).WithCause(err)
 	}
 	if missing := missingTokenFields(body); len(missing) > 0 {
 		message := fmt.Sprintf("token response lacks [%s], %s", strings.Join(missing, ", "), tokensShape)

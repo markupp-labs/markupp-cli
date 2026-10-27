@@ -100,7 +100,7 @@ func (c *notesEditCmd) version() (string, error) {
 		return "", failure.New(failure.Usage, "--since", "missing, expected the updated_at of the note as last read, or --force to overwrite")
 	}
 	if _, err := time.Parse(time.RFC3339Nano, c.since); err != nil {
-		return "", failure.New(failure.Usage, "--since", fmt.Sprintf("invalid time %q, expected RFC 3339 like 2026-05-15T12:00:00Z", c.since))
+		return "", failure.New(failure.Usage, "--since", fmt.Sprintf("invalid time %q, expected RFC 3339 like 2026-05-15T12:00:00Z", c.since)).WithCause(err)
 	}
 	return c.since, nil
 }

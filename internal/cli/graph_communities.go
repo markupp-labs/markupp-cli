@@ -107,7 +107,7 @@ func parseCommunityID(cmd *cobra.Command, arg string) (int64, error) {
 	cid, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil {
 		message := fmt.Sprintf("invalid community id %q, expected an integer", arg)
-		return 0, failure.New(failure.Usage, "CID", message)
+		return 0, failure.New(failure.Usage, "CID", message).WithCause(err)
 	}
 	return cid, nil
 }
