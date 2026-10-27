@@ -73,11 +73,7 @@ func checkLinkFilter(filter client.LinkFilter) error {
 }
 
 func (a *App) fetchVaultLinks(ctx context.Context, flags graphLinksFlags, page client.Page) (io.ReadCloser, error) {
-	target, err := a.resolveVault(flags.vault)
-	if err != nil {
-		return nil, err
-	}
-	graph, err := a.graphConnect(ctx, target)
+	graph, target, err := a.graphConnect(ctx, flags.vault)
 	if err != nil {
 		return nil, err
 	}

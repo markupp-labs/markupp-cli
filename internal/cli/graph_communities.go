@@ -114,11 +114,7 @@ func parseCommunityID(cmd *cobra.Command, arg string) (int64, error) {
 
 // vaultGraphReader resolves the vault of the account and connects to it.
 func (a *App) vaultGraphReader(ctx context.Context, flags vaultFlags) (string, GraphReader, error) {
-	target, err := a.resolveVault(flags)
-	if err != nil {
-		return "", nil, err
-	}
-	graph, err := a.graphConnect(ctx, target)
+	graph, target, err := a.graphConnect(ctx, flags)
 	return target.ID, graph, err
 }
 

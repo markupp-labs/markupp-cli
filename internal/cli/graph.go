@@ -30,12 +30,9 @@ func newGraphCmd(app *App) *cobra.Command {
 	return cmd
 }
 
-// graphConnect connects as the account for a vault id, or anonymously for the slug
-// of a public vault.
-func (a *App) graphConnect(ctx context.Context, target vaultTarget) (GraphReader, error) {
-	svc, err := a.connect(ctx, Target{Vault: target.ID, Public: target.PublicSlug != ""})
-	if err != nil {
-		return nil, err
-	}
-	return svc.Graph, nil
+// graphConnect resolves --vault and --public and connects the way the target needs,
+// as connectVault does, returning the graph reader.
+func (a *App) graphConnect(ctx context.Context, f vaultFlags) (GraphReader, vaultTarget, error) {
+	svc, target, err := a.connectVault(ctx, f)
+	return svc.Graph, target, err
 }

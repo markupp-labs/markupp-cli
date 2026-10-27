@@ -125,11 +125,7 @@ func (a *App) fetchGraph(ctx context.Context, flags graphShowFlags, filter clien
 	if flags.note != "" {
 		return a.fetchNoteGraph(ctx, flags, filter)
 	}
-	target, err := a.resolveVault(flags.vault)
-	if err != nil {
-		return nil, err
-	}
-	graph, err := a.graphConnect(ctx, target)
+	graph, target, err := a.graphConnect(ctx, flags.vault)
 	if err != nil {
 		return nil, err
 	}
