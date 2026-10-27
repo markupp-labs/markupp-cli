@@ -353,6 +353,17 @@ func TestPublicOpensTheNotesOfTheSlug(t *testing.T) {
 	}
 }
 
+func TestPublicNotesOfferNoEditOrDelete(t *testing.T) {
+	connector := newFakeConnector(notesAPI())
+	h := startTUI(t, vaultConfig(connector))
+	h.waitFor("work/plan.md")
+	h.command("public garden")
+	screen := h.waitFor("public:garden", "notes(garden)[3]", "<v>")
+	if strings.Contains(screen, "<e>") || strings.Contains(screen, "<ctrl-d>") {
+		t.Errorf("the read only public scope offers edit or delete:\n%s", screen)
+	}
+}
+
 func TestPublicWithoutSlugIsAUsageError(t *testing.T) {
 	h := startOnNotes(t, notesAPI())
 	h.command("public")
