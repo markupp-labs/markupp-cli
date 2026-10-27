@@ -70,6 +70,7 @@ func newRoot(app *App) *cobra.Command {
 		root.AddCommand(construct(app))
 	}
 	attachSubcommands(app, root)
+	addGeneratedCommands(root)
 	return root
 }
 
