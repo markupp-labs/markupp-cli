@@ -79,6 +79,17 @@ func TestEveryCommandHasAnExample(t *testing.T) {
 	}
 }
 
+func TestGeneratedCommandsAreInTheTree(t *testing.T) {
+	root := newRoot(newApp(newTestMu().deps(nil, nil)))
+	seen := map[string]bool{}
+	walk(root, func(path string, _ string) { seen[path] = true })
+	for _, path := range []string{"mu help", "mu completion", "mu completion bash", "mu completion zsh", "mu completion fish", "mu completion powershell"} {
+		if !seen[path] {
+			t.Errorf("%s is not in the tree newRoot builds, so its Example is not checked", path)
+		}
+	}
+}
+
 func TestFirstRunWithoutURLExplainsHowToConfigure(t *testing.T) {
 	mu := newTestMu()
 	_, err := newApp(mu.deps(nil, nil)).connect(context.Background(), Target{})
@@ -125,12 +136,8 @@ func TestErrorReportCarriesHintAndIsSanitized(t *testing.T) {
 	}
 }
 
-// walk calls visit with the path and example of cmd and every command under it, the
-// generated help and completion commands excepted.
+// walk calls visit with the path and example of cmd and every command under it.
 func walk(cmd *cobra.Command, visit func(path, example string)) {
-	if cmd.Name() == "help" || cmd.Name() == "completion" {
-		return
-	}
 	visit(cmd.CommandPath(), cmd.Example)
 	for _, child := range cmd.Commands() {
 		walk(child, visit)
