@@ -40,6 +40,19 @@ func withFeature(feature string, err error) error {
 	}
 }
 
+// featureRead returns a pass through for the answer of a read, that names feature
+// when the server lacks the endpoint:
+//
+//	body, err := featureRead(featureVaults)(svc.Vaults.ListVaults(ctx))
+func featureRead(feature string) func(io.ReadCloser, error) (io.ReadCloser, error) {
+	return func(body io.ReadCloser, err error) (io.ReadCloser, error) {
+		if err != nil {
+			return nil, withFeature(feature, err)
+		}
+		return body, nil
+	}
+}
+
 // openFeature connects with the account credentials and runs call, naming feature
 // when the server lacks the endpoint.
 func (a *App) openFeature(ctx context.Context, feature string, call func(Services) (io.ReadCloser, error)) (io.ReadCloser, error) {

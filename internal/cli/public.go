@@ -54,9 +54,4 @@ func publicOf(svc Services) (PublicReader, error) {
 // feature when the server has no public routes:
 //
 //	body, err := publicRead(svc.Public.PublicNotes(ctx, target.PublicSlug, filter, page))
-func publicRead(body io.ReadCloser, err error) (io.ReadCloser, error) {
-	if err != nil {
-		return nil, withFeature(featurePublication, err)
-	}
-	return body, nil
-}
+var publicRead = featureRead(featurePublication)

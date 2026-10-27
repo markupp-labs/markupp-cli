@@ -118,12 +118,11 @@ func (a *App) tuiSession() tui.Session {
 }
 
 // tuiConnector connects mu tui to a scope: the tenant it switches to replaces the
-// resolved one. Public vaults need the public routes of the server, which this
-// build does not wire yet.
+// resolved one, and a public vault is read without credentials.
 func (a *App) tuiConnector(resolved config.Resolved, settings config.Settings) tui.Connector {
 	return func(ctx context.Context, scope tui.Scope) (tui.Ports, error) {
 		if scope.PublicSlug != "" {
-			return tui.Ports{}, failure.New(failure.NotFound, ":public "+scope.PublicSlug, "public vaults are not available in this build of mu")
+			return a.tuiPublic(ctx, resolved, settings, scope.PublicSlug)
 		}
 		target := resolved
 		if scope.Tenant != "" {
@@ -132,16 +131,6 @@ func (a *App) tuiConnector(resolved config.Resolved, settings config.Settings) t
 		svc, err := a.dial(ctx, target, settings, false)
 		return tuiPorts(svc), err
 	}
-}
-
-// tuiPorts hands the services to the interface. A port the services lack stays nil,
-// and the interface says the view is not available.
-func tuiPorts(svc Services) tui.Ports {
-	ports := tui.Ports{Notes: svc.Notes, Relations: svc.NoteLinks, Account: svc.Account}
-	if svc.Graph != nil {
-		ports.Graph = tuiGraph{graph: svc.Graph}
-	}
-	return ports
 }
 
 // tuiGraph reads the graph for the interface with the default filters of the server.
