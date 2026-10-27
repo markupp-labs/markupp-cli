@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"strings"
 	"testing"
 
@@ -77,5 +79,15 @@ func TestDiscoverWithMalformedMetadataNamesTheShape(t *testing.T) {
 	expectKind(t, err, failure.Internal)
 	if !strings.Contains(err.Error(), "token_endpoint") {
 		t.Errorf("error = %v, want the expected shape", err)
+	}
+}
+
+func TestDiscoverWithMalformedMetadataKeepsTheDecodeError(t *testing.T) {
+	server := newAuthServer(t)
+	server.metadata = func(string) string { return `{"issuer":42}` }
+	_, err := testClient().Discover(context.Background(), server.URL)
+	var typeErr *json.UnmarshalTypeError
+	if !errors.As(err, &typeErr) {
+		t.Errorf("error = %v, want it to wrap the *json.UnmarshalTypeError", err)
 	}
 }
