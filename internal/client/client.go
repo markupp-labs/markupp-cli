@@ -85,9 +85,3 @@ func build(opts Options) (*Client, error) {
 		userAgent: opts.UserAgent,
 	}, nil
 }
-
-// BaseURL returns a copy of the server URL, the OAuth issuer of the server.
-func (c *Client) BaseURL() *url.URL {
-	copied := *c.base
-	return &copied
-}
