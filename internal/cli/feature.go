@@ -60,11 +60,7 @@ func (a *App) openFeature(ctx context.Context, feature string, call func(Service
 	if err != nil {
 		return nil, err
 	}
-	body, err := call(svc)
-	if err != nil {
-		return nil, withFeature(feature, err)
-	}
-	return body, nil
+	return featureRead(feature)(call(svc))
 }
 
 // execFeature is openFeature for a call that answers without content.
