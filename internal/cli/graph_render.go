@@ -3,7 +3,6 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/markupp-labs/markupp-cli/internal/output"
 	"github.com/markupp-labs/markupp-cli/internal/schema"
@@ -31,8 +30,8 @@ func printGraphNodes(p *output.Printer, nodes []schema.GraphNode) error {
 	}
 	for _, node := range nodes {
 		row := []string{
-			optionalText(node.ID), optionalInt(node.Degree), optionalDecimal(node.PageRank, 4),
-			optionalInt64(node.Community), nodeLabel(node),
+			optionalText(node.ID), dashedInt(node.Degree), optionalDecimal(node.PageRank, 4),
+			dashedInt64(node.Community), nodeLabel(node),
 		}
 		if err := table.Row(row...); err != nil {
 			return err
@@ -86,20 +85,6 @@ func optionalText(value *string) string {
 		return ""
 	}
 	return *value
-}
-
-func optionalInt(value *int) string {
-	if value == nil {
-		return ""
-	}
-	return strconv.Itoa(*value)
-}
-
-func optionalInt64(value *int64) string {
-	if value == nil {
-		return ""
-	}
-	return strconv.FormatInt(*value, 10)
 }
 
 func optionalDecimal(value *float64, places int) string {
