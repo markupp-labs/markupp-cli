@@ -163,6 +163,38 @@ func TestRedirectToAnotherHostDropsCredentials(t *testing.T) {
 	}
 }
 
+func TestRedirectOfABodyToAnotherHostIsRefused(t *testing.T) {
+	other := newFakeServer(t, replyJSON(200, `{}`))
+	origin := newFakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, other.URL+"/landing", http.StatusTemporaryRedirect)
+	})
+	c := newTestClient(t, origin, "t1")
+	err := c.exec(context.Background(), request{method: http.MethodPut, path: endpoint("notes", "n1"), body: []byte(`{"content":"secret"}`)})
+	if err == nil {
+		t.Fatal("exec followed a 307 with the body to another host, want an error")
+	}
+	if got := other.seen(); len(got) != 0 {
+		t.Errorf("the other host received %d requests, want none: %+v", len(got), got)
+	}
+}
+
+func TestRedirectOfABodyOnTheSameHostIsFollowed(t *testing.T) {
+	server := newFakeServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/v1/old" {
+			http.Redirect(w, r, "/v1/new", http.StatusTemporaryRedirect)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	c := newTestClient(t, server, "t1")
+	if err := c.exec(context.Background(), request{method: http.MethodPost, path: "/old", body: []byte(`{"a":1}`)}); err != nil {
+		t.Fatalf("exec: %v", err)
+	}
+	if got := server.seen(); len(got) != 2 || got[1].body != `{"a":1}` {
+		t.Errorf("same host 307 requests = %+v, want the body replayed to /v1/new", got)
+	}
+}
+
 func TestRedirectOnTheSameHostKeepsCredentials(t *testing.T) {
 	server := newFakeServer(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/old" {

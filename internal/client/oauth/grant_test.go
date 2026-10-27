@@ -2,7 +2,9 @@ package oauth
 
 import (
 	"context"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -99,4 +101,25 @@ func TestCanceledGrantIsInterrupted(t *testing.T) {
 	cancel()
 	_, err := testClient().Refresh(ctx, server.metadataOf(), "refresh-0")
 	expectKind(t, err, failure.Interrupted)
+}
+
+func TestRefreshRefusesARedirectToAnotherHost(t *testing.T) {
+	leaked := make(chan string, 1)
+	other := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		leaked <- string(raw)
+	}))
+	t.Cleanup(other.Close)
+	server := newAuthServer(t)
+	server.tokenReply = func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, other.URL+"/oauth/token", http.StatusTemporaryRedirect)
+	}
+	if _, err := testClient().Refresh(context.Background(), server.metadataOf(), "refresh-0"); err == nil {
+		t.Fatal("Refresh followed a 307 to another host, want an error")
+	}
+	select {
+	case form := <-leaked:
+		t.Errorf("the other host received %q, want no request", form)
+	default:
+	}
 }
