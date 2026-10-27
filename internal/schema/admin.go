@@ -30,7 +30,8 @@ type TenantRequest struct {
 	Name string `json:"name"`
 }
 
-// Member is the MemberResponse schema: an account of the tenant and its role.
+// Member is the MemberResponse schema: an account of the tenant and its role, as the
+// members of the tenant and the members of a vault list it.
 type Member struct {
 	ID       string `json:"id"`
 	Email    string `json:"email"`

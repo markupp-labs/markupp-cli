@@ -72,12 +72,12 @@ func newVaultMembersRemoveCmd(app *App) *cobra.Command {
 var vaultMemberColumns = []output.Column{{Name: "ID", Width: 36}, {Name: "ROLE", Width: 6}, {Name: "EMAIL", Width: 32}, {Name: "JOINED"}}
 
 func vaultMemberRow(raw json.RawMessage) ([]string, error) {
-	member, err := decodeRecord[schema.VaultMember](raw)
+	member, err := decodeRecord[schema.Member](raw)
 	return []string{member.ID, member.Role, member.Email, member.JoinedAt}, err
 }
 
 func printVaultMember(p *output.Printer, raw json.RawMessage) error {
-	member, err := decodeRecord[schema.VaultMember](raw)
+	member, err := decodeRecord[schema.Member](raw)
 	if err != nil {
 		return err
 	}
