@@ -9,14 +9,18 @@ const (
 	cancelButton = "Cancel"
 )
 
-// confirm asks before action runs. Cancel has the focus, so Enter alone cancels.
-// It is the only question mu ever asks, and it lives inside mu tui.
-func (s *shell) confirm(text, action string, run func()) {
+// confirm asks before action runs. Cancel has the focus, so Enter alone cancels and
+// runs cancel, which may be nil. It is the only question mu ever asks, and it lives
+// inside mu tui.
+func (s *shell) confirm(text, action string, run, cancel func()) {
 	modal := tview.NewModal().SetText(text).AddButtons([]string{cancelButton, action})
 	modal.SetDoneFunc(func(_ int, label string) {
 		s.closeDialog()
-		if label == action {
+		switch {
+		case label == action:
 			run()
+		case cancel != nil:
+			cancel()
 		}
 	})
 	s.overlay = true

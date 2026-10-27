@@ -13,12 +13,12 @@ Refresh: off                                    <b>      backlinks
 │                                            ║    2026-05-15T10:00:00Z, when you opened it.   ║                                            │
 │                                            ║                                                ║                                            │
 │                                            ║  Overwrite replaces it with your version: the  ║                                            │
-│                                            ║  edits made on the server since then are lost. ║                                            │
+│                                            ║ edits made on the server since then are lost.  ║                                            │
+│                                            ║    Cancel keeps your version in the editor.    ║                                            │
 │                                            ║                                                ║                                            │
 │                                            ║              Cancel     Overwrite              ║                                            │
 │                                            ║                                                ║                                            │
 │                                            ╚════════════════════════════════════════════════╝                                            │
-│                                                                                                                                          │
 │                                                                                                                                          │
 │                                                                                                                                          │
 │                                                                                                                                          │

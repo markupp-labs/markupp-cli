@@ -24,7 +24,7 @@ func (s *shell) editNote(id string) {
 
 func (s *shell) startEdit(note schema.Note) {
 	if s.cfg.Editor == "" {
-		s.push(newEditView(s, note))
+		s.push(newEditView(s, note, note.Content))
 		return
 	}
 	content, err := s.externalEdit(note.Content)
@@ -88,12 +88,22 @@ func (s *shell) leaveEditor() {
 }
 
 // conflict asks whether to overwrite a note that changed on the server. Overwriting
-// is never the default: Cancel has the focus.
+// is never the default: Cancel has the focus, and keeps the edit in the text area.
 func (s *shell) conflict(w noteWrite) {
 	text := fmt.Sprintf("%s changed on the server after %s, when you opened it.\n\n"+
-		"Overwrite replaces it with your version: the edits made on the server since then are lost.",
+		"Overwrite replaces it with your version: the edits made on the server since then are lost. "+
+		"Cancel keeps your version in the editor.",
 		plain(w.note.Path), plain(w.note.UpdatedAt))
-	s.confirm(text, overwriteButton, func() { s.save(w.note, w.content, true) })
+	s.confirm(text, overwriteButton, func() { s.save(w.note, w.content, true) }, func() { s.keepDraft(w) })
+}
+
+// keepDraft opens the refused edit in the text area, unless it is already there: the
+// scratch file of $EDITOR is gone, and the edit lives nowhere else.
+func (s *shell) keepDraft(w noteWrite) {
+	if _, ok := s.stack.top().(*editView); ok {
+		return
+	}
+	s.push(newEditView(s, w.note, w.content))
 }
 
 // isVersionConflict reports the 409 of a note that changed since it was read, not
@@ -109,7 +119,7 @@ const conflictCode = "conflict"
 // deleteNote asks, then deletes the note.
 func (s *shell) deleteNote(id, label string) {
 	text := fmt.Sprintf("Delete the note %s (%s)?\n\nThe note and its content are removed from the server.", plain(label), plain(id))
-	s.confirm(text, deleteButton, func() { s.async(func(ctx context.Context) (func(), error) { return s.remove(ctx, id, label) }) })
+	s.confirm(text, deleteButton, func() { s.async(func(ctx context.Context) (func(), error) { return s.remove(ctx, id, label) }) }, nil)
 }
 
 func (s *shell) remove(ctx context.Context, id, label string) (func(), error) {
