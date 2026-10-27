@@ -7,6 +7,7 @@ import (
 
 	"github.com/markupp-labs/markupp-cli/internal/config"
 	"github.com/markupp-labs/markupp-cli/internal/failure"
+	"github.com/markupp-labs/markupp-cli/internal/session"
 )
 
 var loginExpiry = time.Date(2026, 10, 26, 13, 0, 0, 0, time.UTC)
@@ -89,5 +90,18 @@ func TestLoginFailureKeepsItsKind(t *testing.T) {
 	run.expectCode(t, 3)
 	if !strings.Contains(run.stderr, "refused the login") {
 		t.Errorf("stderr %q, want the cause", run.stderr)
+	}
+}
+
+func TestSessionAuthenticatorCarriesTheSetup(t *testing.T) {
+	store := &fakeConfigStore{path: "/home/u/.config/markupp/cli.json"}
+	var notice strings.Builder
+	built := newSessionAuthenticator(AuthSetup{Store: store, Notice: &notice})
+	auth, ok := built.(session.Authenticator)
+	if !ok {
+		t.Fatalf("newSessionAuthenticator built %T, want a session.Authenticator", built)
+	}
+	if auth.Store != store || auth.Notice != &notice || auth.OAuth == nil {
+		t.Errorf("authenticator = %+v, want the store, the notice writer and an OAuth client", auth)
 	}
 }
