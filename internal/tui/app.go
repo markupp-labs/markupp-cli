@@ -38,9 +38,13 @@ type shell struct {
 	runEditor func(argv []string) error
 }
 
-// Run starts mu tui and blocks until the user quits or ctx ends. It connects before
-// drawing anything, so a missing login fails like any other command.
+// Run starts mu tui and blocks until the user quits or ctx ends. It refuses a stdin or
+// stdout that is not the terminal, and connects before drawing anything, so a missing
+// login fails like any other command.
 func Run(ctx context.Context, cfg Config) error {
+	if err := checkTerminal(cfg.Terminal); err != nil {
+		return err
+	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	s, err := newShell(ctx, cfg)
