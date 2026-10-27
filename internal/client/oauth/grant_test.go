@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -75,6 +77,19 @@ func TestGrantErrorsNeverQuoteTheBody(t *testing.T) {
 				t.Errorf("error = %v, want an error that does not quote the body", err)
 			}
 		})
+	}
+}
+
+func TestTokenResponseNotJSONKeepsTheDecodeError(t *testing.T) {
+	server := newAuthServer(t)
+	server.tokenReply = replyJSON(http.StatusOK, `secret-access`)
+	_, err := testClient().Refresh(context.Background(), server.metadataOf(), "refresh-0")
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
+		t.Errorf("error = %v, want it to wrap the *json.SyntaxError", err)
+	}
+	if strings.Contains(err.Error(), "secret") || strings.Contains(err.Error(), "'s'") {
+		t.Errorf("error = %q quotes the body", err)
 	}
 }
 

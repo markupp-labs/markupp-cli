@@ -113,3 +113,15 @@ func TestWrapReadTurnsACanceledReadIntoAnInterrupt(t *testing.T) {
 		t.Errorf("broken read = %v (kind %s), want unavailable", broken, broken.Kind)
 	}
 }
+
+func TestWithCauseKeepsTheMessageAndExposesTheCause(t *testing.T) {
+	cause := errors.New("parse error")
+	base := New(Usage, "--since", "invalid time")
+	caused := base.WithCause(cause)
+	if !errors.Is(caused, cause) || caused.Error() != "--since: invalid time" {
+		t.Errorf("WithCause = %q, want the same message wrapping the cause", caused)
+	}
+	if base.Err != nil {
+		t.Error("WithCause mutated the original")
+	}
+}
