@@ -18,14 +18,18 @@ func TestIsRoleAcceptsOnlyTheSchemaRoles(t *testing.T) {
 	}
 }
 
-func TestMyTenantDecodesTheEmbeddedTenant(t *testing.T) {
-	var got MyTenant
-	body := `{"id":"t1","name":"Acme","role":"owner","notes_count":3,"last_note_at":null}`
+func TestMyTenantDecodesTheEmbeddedTenantAndTheSummary(t *testing.T) {
+	var got []MyTenant
+	body := `[{"id":"t1","name":"Acme","role":"owner","notes_count":3,"last_note_at":"2026-10-01T10:00:00Z"},` +
+		`{"id":"t2","name":"Empty","role":"viewer","notes_count":0,"last_note_at":null}]`
 	if err := json.Unmarshal([]byte(body), &got); err != nil {
 		t.Fatalf("Unmarshal(%s): %v", body, err)
 	}
-	if got.ID != "t1" || got.Name != "Acme" || got.Role != "owner" || got.NotesCount != 3 || got.LastNoteAt != nil {
-		t.Errorf("got %+v", got)
+	if len(got) != 2 || got[0].Tenant != (Tenant{ID: "t1", Name: "Acme", Role: "owner"}) || got[0].NotesCount != 3 {
+		t.Fatalf("got %+v", got)
+	}
+	if got[0].LastNoteAt == nil || *got[0].LastNoteAt != "2026-10-01T10:00:00Z" || got[1].LastNoteAt != nil {
+		t.Errorf("last_note_at = %v and %v, want the time and nil", got[0].LastNoteAt, got[1].LastNoteAt)
 	}
 }
 
