@@ -1,0 +1,30 @@
+Server:  https://markupp.example.com            <enter>  open                <m>      mentions
+Tenant:  default tenant                         <v>      view                <s>      suggestions
+Account: ana@example.com                        <e>      edit                <g>      graph
+Vault:   9b2f4c1e-0a1b-4c2d-8e3f-a1b2c3d4e5f6   <ctrl-d> delete              <y>      copy id
+Token:   login, expires in 42m0s                <l>      links
+Refresh: off                                    <b>      backlinks
+┌───────────────────────────────────────────── notes(9b2f4c1e-0a1b-4c2d-8e3f-a1b2c3d4e5f6)[3] ─────────────────────────────────────────────┐
+│PATH                   UPDATED                    DEGREE        RANK         COMMUNITY        ID                                          │
+│work/meeting.md        2026-05-15T10:00:00Z       3             0.250        2                f47ac10b-58cc-4372-a567-0e02b2c3d479        │
+│animals/zebra.md       2026-05-14T09:00:00Z ╔════════════════════════════════════════════════╗0e8d2c4a-1b3f-4a5e-9c7d-2f4e6a8b0c1d        │
+│work/plan.md           2026-05-13T08:00:00Z ║                                                ║5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d        │
+│                                            ║  work/meeting.md changed on the server after   ║                                            │
+│                                            ║    2026-05-15T10:00:00Z, when you opened it.   ║                                            │
+│                                            ║                                                ║                                            │
+│                                            ║  Overwrite replaces it with your version: the  ║                                            │
+│                                            ║ edits made on the server since then are lost.  ║                                            │
+│                                            ║    Cancel keeps your version in the editor.    ║                                            │
+│                                            ║                                                ║                                            │
+│                                            ║              Cancel     Overwrite              ║                                            │
+│                                            ║                                                ║                                            │
+│                                            ╚════════════════════════════════════════════════╝                                            │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+│                                                                                                                                          │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ default tenant   notes
+

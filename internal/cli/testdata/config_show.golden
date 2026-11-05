@@ -1,0 +1,7 @@
+KEY     SOURCE  VALUE
+url     flag    https://flag.example.com
+tenant  env     t-env
+vault   file    v-file
+token   env     set
+login   file    issuer http://localhost:8080, expires 2026-11-01T12:00:00Z
+path    -       /home/u/.config/markupp/cli.json

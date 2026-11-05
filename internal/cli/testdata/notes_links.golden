@@ -1,0 +1,4 @@
+ID                                    TYPE              PATH                                      CITED
+n2                                    explicit          notes/b.md                                B
+n3                                    typed:author      people/ana.md                             Ana
+-                                     explicit          -                                         Meting

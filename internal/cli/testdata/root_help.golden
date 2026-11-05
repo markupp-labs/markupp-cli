@@ -1,0 +1,35 @@
+mu reads and writes the notes of a Markupp server: text by default, the API payload with --json.
+
+Usage:
+  mu [command]
+
+Examples:
+  mu config set url https://markupp.example.com
+  mu config show --json
+
+Available Commands:
+  completion    Generate the autocompletion script for the specified shell
+  config        Show and change the configuration
+  graph         Read the graph, communities and links of a vault
+  help          Help about any command
+  invites       Answer the invites addressed to the account
+  login         Log in to a server through the browser
+  logout        Revoke the stored login and remove it from the config file
+  members       Manage the members and invites of the tenant
+  notes         List, read, write and search notes
+  notifications List the notifications of the account
+  status        Show the server, the login and the account; tokens are never shown
+  tenants       List and create the tenants of the account
+  tui           Browse and edit notes in an interactive interface
+  vaults        Manage vaults, their members and their publication
+
+Flags:
+      --allow-plain-http   allow http:// outside localhost, sending the token unencrypted
+  -h, --help               help for mu
+      --json               print the API payload as JSON, unchanged
+      --tenant string      tenant id, for accounts in several tenants (overrides MARKUPP_TENANT)
+      --url string         server URL (overrides MARKUPP_URL and the config file)
+  -v, --verbose            log each request as JSON on stderr
+      --version            version for mu
+
+Use "mu [command] --help" for more information about a command.

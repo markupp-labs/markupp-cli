@@ -1,0 +1,3 @@
+server  https://markupp.example.com
+health  ok
+token   none; run mu login

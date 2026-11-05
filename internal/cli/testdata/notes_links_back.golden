@@ -1,0 +1,4 @@
+ID                                    TYPE              PATH                                      CITED
+n1                                    explicit          a.md                                      B
+n1                                    typed:author      a.md                                      Ana
+n1                                    explicit          a.md                                      Meting
